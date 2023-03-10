@@ -13,3 +13,11 @@ To install Locosim run
 install_scripts/locosim_installer.sh
 ```
 In this case the lonely parameter that should be changed is the installation destination of the ROS workspace and locosim, that by default is in `~/ros`.
+
+## Cloning this repository
+
+Once the ROS workspace `~/ros` is set up, you can clone the repository inside the `~/ros/src` folder:
+```
+git clone https://github.com/matteodv99tn/IDS-project.git cooperative_ur5_estimation_control
+```
+The package for ROS has a different name then the repository, so be aware of the second argument of the clone command.
