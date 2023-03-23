@@ -21,3 +21,10 @@ Once the ROS workspace `~/ros` is set up, you can clone the repository inside th
 git clone https://github.com/matteodv99tn/IDS-project.git cooperative_ur5_estimation_control
 ```
 The package for ROS has a different name then the repository, so be aware of the second argument of the clone command.
+
+
+# Bibliography and references:
+
+- [_Cooperative manipulation_](http://www.prisma.unina.it/courses/SHB_39.pdf): interesting book extract containing useful informations in order to work multiple robots;
+- [_Control and Estimation for Cooperative Manipulator Tasks_](http://dspace.mit.edu/handle/1721.1/31217): technical report for a project whee they discuss the problem of handing a object from one robot to another;
+- [_Real-Time Kinematic Control for Redundant Manipulators in a Time-Varying Environment: Multiple-Dynamic Obstacle Avoidance and Fast Tracking of a Movign Object_](https://ieeexplore.ieee.org/document/8716565): here they use principal component analysis to adapt the tracking capability of the system (the paper studies a mobile robot on top of which multiple manipulators are mounted);
