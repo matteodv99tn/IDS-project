@@ -41,7 +41,7 @@ methods %% ---- Member functions -----------------------------------------------
         
         global dt;
         self.dt     = dt;
-    end % Manipulator function
+    end % Manipulator constructor
 
 
     function plot(self)
@@ -60,10 +60,85 @@ methods %% ---- Member functions -----------------------------------------------
         plot(points(1,:), points(2,:), "-o");
         hold on;
         quiver(P3(1), P3(2), darrow(1), darrow(2), "g");
-    end % plot function 
+    end % plot function overload
 
 
-    function update_model(ddq);
+    function update_model(self, ddq)
+        % Updates the model based on the provided joint accelerations ddq
+        I       = eye(3);
+        self.q  = self.q  + I*self.dq*self.dt;
+        self.dq = self.dq + I*ddq*self.dt;
+    end
+
+
+    function RF_EE = EE_frame(self)
+        % Computes the reference frame of the end effector given the current configuration
+        q1  = self.q(1);
+        q2  = self.q(2);
+        q3  = self.q(3);
+        L1  = self.L1;
+        L2  = self.L2;
+        xo  = self.origin(1);
+        yo  = self.origin(2);
+
+        % Computation provided by Maple        
+        t1 = cos(q1);
+        t2 = cos(q2);
+        t4 = sin(q1);
+        t5 = sin(q2);
+        t7 = t2 * t1 - t5 * t4;
+        t8 = cos(q3);
+        t12 = -t5 * t1 - t2 * t4;
+        t13 = sin(q3);
+        res__1_1 = t13 * t12 + t8 * t7;
+        t18 = -t8 * t12;
+        res__1_2 = -t13 * t7 - t18;
+        t20 = t2 * L2 + L1;
+        res__1_3 = -t4 * t5 * L2 + t1 * t20 + xo;
+        res__2_1 = t13 * t7 + t18;
+        res__2_2 = res__1_1;
+        res__2_3 = t5 * t1 * L2 + t4 * t20 + yo;
+        res__3_3 = 1;
+        RF_EE = zeros(3, 3);
+        RF_EE(1, 1) = res__1_1;
+        RF_EE(1, 2) = res__1_2;
+        RF_EE(1, 3) = res__1_3;
+        RF_EE(2, 1) = res__2_1;
+        RF_EE(2, 2) = res__2_2;
+        RF_EE(2, 3) = res__2_3;
+        RF_EE(3, 3) = res__3_3;
+    end
+
+
+    function J_EE = EE_jacobian(self)
+        % Jacobian of the end effector (wrt the joints) given the current robot configuration
+        q1  = self.q(1);
+        q2  = self.q(2);
+        q3  = self.q(3);
+        L1  = self.L1;
+        L2  = self.L2;
+
+        % Computations from Maple
+        t1 = cos(q2);
+        t3 = -t1 * L2 - L1;
+        t4 = sin(q1);
+        t6 = cos(q1);
+        t8 = sin(q2);
+        res__1_1 = -t8 * t6 * L2 + t4 * t3;
+        res__1_2 = -L2 * (t1 * t4 + t8 * t6);
+        res__2_1 = -t4 * t8 * L2 - t6 * t3;
+        res__2_2 = L2 * (t1 * t6 - t8 * t4);
+        res__3_1 = 1;
+        res__3_2 = 1;
+        res__3_3 = 1;
+        J_EE = zeros(3, 3);
+        J_EE(1, 1) = res__1_1;
+        J_EE(1, 2) = res__1_2;
+        J_EE(2, 1) = res__2_1;
+        J_EE(2, 2) = res__2_2;
+        J_EE(3, 1) = res__3_1;
+        J_EE(3, 2) = res__3_2;
+        J_EE(3, 3) = res__3_3;
     end
 
 
