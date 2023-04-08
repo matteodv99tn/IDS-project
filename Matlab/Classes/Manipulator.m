@@ -63,11 +63,14 @@ methods %% ---- Member functions -----------------------------------------------
     end % plot function overload
 
 
-    function update_model(self, ddq)
+    function update_model(self, tau)
         % Updates the model based on the provided joint accelerations ddq
-        I       = eye(3);
-        self.q  = self.q  + I*self.dq*self.dt;
-        self.dq = self.dq + I*ddq*self.dt;
+        M = self.mass_matrix();
+        h = self.bias_forces();
+
+        ddq         = linsolve(M, tau - h);
+        self.dq     = self.dq + ddq*self.dt;
+        self.q      = self.q  + self.dq*self.dt;
     end
 
 
@@ -81,7 +84,7 @@ methods %% ---- Member functions -----------------------------------------------
         xo  = self.origin(1);
         yo  = self.origin(2);
 
-        % Computation provided by Maple        
+        % Maple generated code 
         t1 = cos(q1);
         t2 = cos(q2);
         t4 = sin(q1);
@@ -118,7 +121,7 @@ methods %% ---- Member functions -----------------------------------------------
         L1  = self.L1;
         L2  = self.L2;
 
-        % Computations from Maple
+        % Maple generated code 
         t1 = cos(q2);
         t3 = -t1 * L2 - L1;
         t4 = sin(q1);
@@ -139,6 +142,93 @@ methods %% ---- Member functions -----------------------------------------------
         J_EE(3, 1) = res__3_1;
         J_EE(3, 2) = res__3_2;
         J_EE(3, 3) = res__3_3;
+    end
+
+
+    function M = mass_matrix(self)
+        % Computes the mass matrix of the current configuration
+        q1 = self.q(1);
+        q2 = self.q(2);
+        q3 = self.q(3);
+        L1 = self.L1;
+        L2 = self.L2;
+
+        % Maple generated code
+        t1 = L2 ^ 2;
+        t2 = cos(q3);
+        t7 = cos(q2);
+        t8 = t7 * L1 * (t1 + 2 * t2 + 2 * L2);
+        t9 = t2 * L2;
+        t10 = 2 * t9;
+        t11 = sin(q2);
+        t12 = sin(q3);
+        t14 = L1 * t12 * t11;
+        t16 = L1 ^ 2;
+        t24 = t1 * L2 / 3;
+        res__1_1 = t8 + t10 - 2 * t14 + t16 * L1 / 3 + t16 * (3 * L2 + 3) / 3 + t24 + t1 + 1;
+        res__1_2 = t8 / 2 + t24 - t14 + t10 + t1 + 1;
+        res__1_3 = -t14 + 1 + t2 * (L1 * t7 + L2);
+        res__2_1 = res__1_2;
+        res__2_2 = t24 + t1 + t10 + 1;
+        res__2_3 = t9 + 1;
+        res__3_1 = res__1_3;
+        res__3_2 = res__2_3;
+        res__3_3 = 1;
+        M = zeros(3, 3);
+        M(1, 1) = res__1_1;
+        M(1, 2) = res__1_2;
+        M(1, 3) = res__1_3;
+        M(2, 1) = res__2_1;
+        M(2, 2) = res__2_2;
+        M(2, 3) = res__2_3;
+        M(3, 1) = res__3_1;
+        M(3, 2) = res__3_2;
+        M(3, 3) = res__3_3;
+    end
+
+
+    function h = bias_forces(self)
+        % Computes the mass matrix of the current configuration
+        q1 = self.q(1);
+        q2 = self.q(2);
+        q3 = self.q(3);
+        q1__vel = self.dq(1);
+        q2__vel = self.dq(2);
+        q3__vel = self.dq(3);
+        L1 = self.L1;
+        L2 = self.L2;
+
+        % Maple generated code
+        t1 = L2 ^ 2;
+        t2 = cos(q3);
+        t7 = cos(q2);
+        t8 = t7 * L1 * (t1 + 2 * t2 + 2 * L2);
+        t9 = t2 * L2;
+        t10 = 2 * t9;
+        t11 = sin(q2);
+        t12 = sin(q3);
+        t14 = L1 * t12 * t11;
+        t16 = L1 ^ 2;
+        t24 = t1 * L2 / 3;
+        res__1_1 = t8 + t10 - 2 * t14 + t16 * L1 / 3 + t16 * (3 * L2 + 3) / 3 + t24 + t1 + 1;
+        res__1_2 = t8 / 2 + t24 - t14 + t10 + t1 + 1;
+        res__1_3 = -t14 + 1 + t2 * (L1 * t7 + L2);
+        res__2_1 = res__1_2;
+        res__2_2 = t24 + t1 + t10 + 1;
+        res__2_3 = t9 + 1;
+        res__3_1 = res__1_3;
+        res__3_2 = res__2_3;
+        res__3_3 = 1;
+        M = zeros(3, 3);
+        M(1, 1) = res__1_1;
+        M(1, 2) = res__1_2;
+        M(1, 3) = res__1_3;
+        M(2, 1) = res__2_1;
+        M(2, 2) = res__2_2;
+        M(2, 3) = res__2_3;
+        M(3, 1) = res__3_1;
+        M(3, 2) = res__3_2;
+        M(3, 3) = res__3_3;
     end
 
 
