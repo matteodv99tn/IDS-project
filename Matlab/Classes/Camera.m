@@ -14,13 +14,12 @@ methods %% ---- Member functions -----------------------------------------------
 
     function self = Camera(fov, n_points)
 
-        global d_cam_std;
-        global theta_cam_std;
+        config = get_current_configuration();
 
         self.n_points   = n_points;
         self.fov        = fov;
         self.angles     = linspace(-fov/2, fov/2, n_points);
-        self.polar_covariance = diag([d_cam_std, theta_cam_std]);
+        self.polar_covariance = diag([config.camera.d_std, config.camera.theta_std]);
 
     end % Camera constructor
 

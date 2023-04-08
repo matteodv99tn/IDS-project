@@ -6,7 +6,8 @@ function d = cast_ray(P1, P2, O, v)
     %   - d:    the distance of between O and P1P2 (in the direction of v)
     %   - t:    a parameter to identify if the casted ray is inside 
 
-    global d_max;
+    config = get_current_configuration();
+    d_max  = config.camera.d_max;
 
     A = [P2-P1, -v];
     b = [O - P1];

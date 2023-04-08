@@ -13,7 +13,8 @@ methods %% ---- Member functions -----------------------------------------------
 
     function self = Scan(manipulator, camera, object)
 
-        global d_max;
+        config = get_current_configuration();
+        d_max  = config.camera.d_max;
         
         RF_camera = manipulator.EE_frame();
         polygon   = object.point_matrix;
