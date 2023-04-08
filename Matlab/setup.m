@@ -13,7 +13,7 @@ global d_max;                   % maximum value that can be sensed
 global d_cam_std;               % standard deviation of the lidar scan ranging (in m)
 global theta_cam_std;           % standard deviation of the lidar scan bearing (in rad)
 
-dt              = 0.01;
+dt              = 0.001;
 d_max           = 30;
 d_cam_std       = 0.01;
 theta_cam_std   = 0.5 * pi / 180;   % 0.5 degrees
@@ -21,12 +21,12 @@ theta_cam_std   = 0.5 * pi / 180;   % 0.5 degrees
 %% --- Default configuration
 
 % --- Simulation parameters
-config.simulation.dt    = 0.01;                             % sampling period for the simulation
+config.simulation.dt    = 0.001;                            % sampling period for the simulation
 
 % --- Camera parameters
 config.camera.d_max     = 30;                               % maximum recordable distance value
 config.camera.d_std     = 0.01;                             % distance estimation standard deviation
-config.camera.theta_std = 0.5 * pi / 180;                   % angle estimation std
+config.camera.theta_std = 0.1 * pi / 180;                   % angle estimation std
 
 
 %% --- Export default configuration 

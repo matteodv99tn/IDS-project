@@ -17,28 +17,29 @@ methods %% ---- Member functions -----------------------------------------------
         d_max  = config.camera.d_max;
         
         RF_camera = manipulator.EE_frame();
-        polygon   = object.point_matrix;
+        polygon   = object.get_projected_polygon();
 
         angles              = camera.angles + randn(1, camera.n_points)*camera.polar_covariance(2, 2);
         polar_directions    = RF_camera * [cos(angles); sin(angles); zeros(1, camera.n_points)];
-        camera_origin       = RF.camera * [0; 0; 1];
+        camera_origin       = RF_camera * [0; 0; 1];
 
         polar_meas = d_max * ones(1, camera.n_points);
         curr_meas = zeros(1, camera.n_points);
 
         for i = 1:size(polygon, 2)-1
-            P1 = polygon(:, i);
-            P2 = polygon(:, i+1);
+            P1 = polygon(1:2, i);
+            P2 = polygon(1:2, i+1);
 
             for j = 1:camera.n_points 
-                curr_meas(j) = cast_ray(P1, P2, camera_origin(1:2), angles(j));
+                v = polar_directions(1:2, j);
+                curr_meas(j) = cast_ray(P1, P2, camera_origin(1:2), v);
             end
             
             correct_meas = curr_meas < polar_meas;
-            polar_meas(correct_meas) = curr_meas(correct_meas)
+            polar_meas(correct_meas) = curr_meas(correct_meas);
         end
 
-        polar_meas = polar_meas * randn(1, camera.n_points)*camera.polar_covariance(1, 1);        
+        polar_meas = polar_meas + randn(1, camera.n_points)*camera.polar_covariance(1, 1);        
 
         self.cartesian_points = [ ...
                 polar_meas .* cos(camera.angles); ...
@@ -50,7 +51,7 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function plot(self)
-        plot(self.cartesian_points[1,:], self.cartesian_points[2,:], ".k");
+        plot(self.cartesian_points(1,:), self.cartesian_points(2,:), ".k");
     end % plot function 
 
     

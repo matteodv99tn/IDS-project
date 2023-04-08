@@ -10,7 +10,7 @@ function d = cast_ray(P1, P2, O, v)
     d_max  = config.camera.d_max;
 
     A = [P2-P1, -v];
-    b = [O - P1];
+    b = O - P1;
     
     if abs(det(A)) < 1e-6
         d = d_max;

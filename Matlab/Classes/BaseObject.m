@@ -1,4 +1,4 @@
-classdef Object < handle
+classdef BaseObject < handle
 
 properties %% ---- Attributes of the class --------------------------------------------------------
     
@@ -18,7 +18,14 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function plot(self)
+        data = self.RF * self.point_matrix;
+        plot(data(1,:), data(2,:), "k");
     end % plot function 
+
+
+    function poly = get_projected_polygon(self)
+        poly = self.RF * self.point_matrix;
+    end % get_projected_polygon function
 
 
 end % methods
