@@ -3,6 +3,7 @@
 
 addpath("Classes");
 addpath(fullfile("Classes", "Datasets"));
+addpath(fullfile("Classes", "Controllers"));
 addpath("Functions");
 addpath("Configurations");
 

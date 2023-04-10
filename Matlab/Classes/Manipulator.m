@@ -11,6 +11,9 @@ properties %% ---- Attributes of the class -------------------------------------
     L1;         
     L2;
 
+    % --- Controller 
+    controller;
+
     % --- Other parameters 
     dt;
 
@@ -41,6 +44,8 @@ methods %% ---- Member functions -----------------------------------------------
         
         global dt;
         self.dt     = dt;
+
+        self.controller = BaseController();
     end % Manipulator constructor
 
 
@@ -63,6 +68,17 @@ methods %% ---- Member functions -----------------------------------------------
     end % plot function overload
 
 
+    function set_controller(self, controller)
+        self.controller = controller;
+    end
+
+
+    function update_control_law(self);
+        tau = self.controller.compute_tau(self);
+        self.update_model(tau);
+    end
+
+
     function update_model(self, tau)
         % Updates the model based on the provided joint accelerations ddq
         M = self.mass_matrix();
@@ -73,6 +89,19 @@ methods %% ---- Member functions -----------------------------------------------
         self.q      = self.q  + self.dq*self.dt;
     end
 
+
+    function EE = get_EE_state(self)
+        % Return the sate of the end effector, i.e. the cartesian coordinates wrt world as well as
+        % it's heading.
+        EE = self.EE_frame() * [0; 0; 1];
+        EE(3) = sum(self.q);
+    end
+
+
+    function v = get_EE_velocity(self)
+        % Returns the velocity of the end effector in cartesian coordinate
+        v = self.EE_jacobian() * self.dq;
+    end
 
     function RF_EE = EE_frame(self)
         % Computes the reference frame of the end effector given the current configuration
