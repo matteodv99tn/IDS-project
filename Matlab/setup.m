@@ -13,6 +13,7 @@ global dt;                      % sampling period for the simulation
 global d_max;                   % maximum value that can be sensed 
 global d_cam_std;               % standard deviation of the lidar scan ranging (in m)
 global theta_cam_std;           % standard deviation of the lidar scan bearing (in rad)
+global datasets;
 
 dt              = 0.001;
 d_max           = 30;
@@ -29,7 +30,8 @@ config.camera.d_max     = 30;                               % maximum recordable
 config.camera.d_std     = 0.01;                             % distance estimation standard deviation
 config.camera.theta_std = 0.1 * pi / 180;                   % angle estimation std
 
-
+datasets = [Rectangle, Square, Pentagon, RegularPolygon(3), RegularPolygon(4), RegularPolygon(5), RegularPolygon(6),RegularPolygon(7),RegularPolygon(8),RegularPolygon(9)];
+            
 %% --- Export default configuration 
 file = fopen(fullfile("Configurations", "default.json"), "w");
 fprintf(file, "%s", jsonencode(config, PrettyPrint=true));
