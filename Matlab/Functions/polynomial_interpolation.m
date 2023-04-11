@@ -1,4 +1,4 @@
-function pars = polynomial_interpolation(TT, x_i, x_i_dot, x_o)
+function pars = polynomial_interpolation(TT, x_i, x_i_dot, x_f)
     % Performs a fitting with a polynomial of order 6
     res__1_1 = x_i;
     res__1_2 = x_i_dot;

@@ -6,11 +6,11 @@ setup;
 
 
 %% --- Simulation setup
-man     = Manipulator(3,3);         % initialize the manipulator and the camera     
-cam     = Camera(45*pi/180, 101);
+man     = Manipulator(5,5);         % initialize the manipulator and the camera     
+cam     = Camera(60*pi/180, 101);
 man.q   = [pi/2; -pi/2; -pi/2];     % set the init. cond. of the robot (avoiding singular confs.)
 
-t = 0:dt:3;                         % initialize the vector of times
+t = 0:dt:22;                        % initialize the vector of times
 
 RF      = translation_matrix(3, 0); % determine the reference frame where to place the square
 obj     = Square(RF);               % instantiate a square
@@ -37,26 +37,42 @@ close all;
 
 man.set_controller(CartesianPointController());
 man.controller.set_target([2; 0; 0]);
+man.controller.enqueue_target([3; 7; -pi/2]);
+man.controller.enqueue_target([3; 3; -pi/2]);
+man.controller.enqueue_target([0; 2; -pi/4]);
+man.controller.enqueue_target([1; -3; pi/3]);
+man.controller.enqueue_target([6; -2; 0.8*pi]);
+q_traj = zeros(3, length(t));
+
 
 for k = 1:length(t)
 
     man.update_control_law();
     q_traj(:, k) = man.q;
 
-    if mod(k, 20) == 0
+    if mod(k, 150) == 0
         figure(1), clf;
+        subplot(1, 2, 1);
         plot(man);
+        plot(obj);
+        axis equal;
         title(num2str(t(k)));
         xlim([-1 10]);
         ylim([-7, 10]);
+        subplot(1, 2, 2);
+        scan    = Scan(man, cam, obj);      % create the scan given the initial configuration
+        plot(scan);
+        axis equal;
+        xlim([-1 30]);
+        ylim([-15, 15]);
     end
 
-    if k == round(length(t)/2)
-        man.controller.set_target([4; 2; -pi/2]);
-    end
+    % if k == round(length(t)/2)
+    %     man.controller.set_target([4; 2; -pi/2]);
+    % end
 
 end
 
 figure; % joint behavior
 plot(t, q_traj);
-yline(q_des);
+% yline(q_des);
