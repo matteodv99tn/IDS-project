@@ -1,4 +1,4 @@
-classdef Pentagon < BaseObject
+classdef Triangle < BaseObject
 
 properties %% ---- Attributes of the class --------------------------------------------------------
 
@@ -7,7 +7,7 @@ end % properties
 
 methods %% ---- Member functions ------------------------------------------------------------------
 
-    function self = Pentagon(orig_RF)
+    function self = Triangle(orig_RF)
         if nargin == 1
             self.RF = orig_RF;
         else
@@ -18,14 +18,12 @@ methods %% ---- Member functions -----------------------------------------------
             -1,  1,  1, 0, -1, -1; ...
             -1, -1,  1, 2,  1, -1; ...
              1,  1,  1, 1,  1,  1;  ...
-             1,  1,  1, 1,  1,  1;  ...
-             1,  1,  1, 1,  1,  1  ...
              ];
 
-    end % Pentagon constructor
+    end % Triangle constructor
 
 
 end % methods
 
-end % Pentagon class
+end % Triangle class
 
