@@ -1,14 +1,15 @@
+
 {
   "simulation": {
     "dt": 0.001
   },
   "feature_extraction": {
-    "delta": 0.02,
-    "epsilon": 0.01
+    "delta": 0.0001,
+    "epsilon": 0.0001
   },
   "camera": {
     "d_max": 30,
-    "d_std": 0.01,
-    "theta_std": 0.0017453292519943296
+    "d_std": 0.0,
+    "theta_std": 0.0
   }
 }

@@ -6,6 +6,7 @@ addpath(fullfile("Classes", "Datasets"));
 addpath(fullfile("Classes", "Controllers"));
 addpath("Functions");
 addpath("Configurations");
+addpath("Test_Scripts");
 
 
 
@@ -36,6 +37,10 @@ datasets = {
 
 % --- Simulation parameters
 config.simulation.dt    = 0.001;                            % sampling period for the simulation
+
+% --- Feature extraction algorithm
+config.feature_extraction.delta = 0.02;
+config.feature_extraction.epsilon = 0.01;
 
 % --- Camera parameters
 config.camera.d_max     = 30;                               % maximum recordable distance value
