@@ -69,8 +69,8 @@ methods %% ---- Member functions -----------------------------------------------
     end % plot function 
 
     
-    function [features, feat_covariance] = extract_features(self)
-    end
+    % function [features, feat_covariance] = extract_features(self)
+    % end
 
 
 end % methods

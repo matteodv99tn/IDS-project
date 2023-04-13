@@ -25,7 +25,7 @@ methods %% ---- Member functions -----------------------------------------------
         if nargin == 3  % seed generation: given a scan and indexes, feet a seed
             self.extract_data_from_scan(in1, in2, in3);
             self.fit_seed();
-        elseif narging == 2 % 2 seeds that should be joined
+        elseif nargin == 2 % 2 seeds that should be joined
             self.join_seeds_content(in1, in2);
             self.fit_seed();
         else 
@@ -100,28 +100,40 @@ methods %% ---- Member functions -----------------------------------------------
         delta   = config.feature_extraction.delta;
         epsilon = config.feature_extraction.epsilon;
 
-        fprintf("eps = %f\ndelta = %f\n\n", epsilon, delta);
-
         for i = 1:size(self.data, 2)
-            fprintf("ID %d\n", i);
             P_meas  = self.data(:, i);
             P_pred  = self.predict_point(i);
 
             cond1   = (point_point_distance(P_meas, P_pred) > delta);
             cond2   = (self.distance_from_point(P_meas) > epsilon);
-            if cond2 
-                fprintf("line point distance not satisfied\n");
-            end
-            if cond1
-                fprintf("point point distance not satisfied\n");
-            end
-
             if cond1 || cond2 
                 is_valid = false;
                 return;
             end
         end
     end % is_valid_seed function
+
+
+    function joinable = is_joinable_with(self, other)
+        % Determine if a given seed is joinable with another one or not
+        config      = get_current_configuration;
+        alpha       = config.feature_extraction.max_alpha;
+        joinable    = false;
+
+        if other.start_index > self.end_index
+            return;
+        end
+
+        v1 = [self.a; self.b];
+        v2 = [other.a; other.b];
+        current_cos = transpose(v1)*v2 / (norm(v1)*norm(v2));
+
+        if abs(current_cos) < cos(alpha) 
+            return;
+        end
+
+        joinable = true;
+    end
 
 
     function predicted_point = predict_point(self, idx)

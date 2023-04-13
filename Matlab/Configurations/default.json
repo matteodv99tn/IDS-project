@@ -4,7 +4,10 @@
   },
   "feature_extraction": {
     "delta": 0.02,
-    "epsilon": 0.01
+    "epsilon": 0.01,
+    "max_alpha": 0.087266462599716474,
+    "n_point_generation": 6,
+    "n_point_back_on_success": 2
   },
   "camera": {
     "d_max": 30,
