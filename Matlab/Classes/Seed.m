@@ -35,8 +35,8 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function plot(self)
-        P_start = self.predict_point(1);
-        P_end   = self.predict_point(size(self.data, 2));
+        P_start = self.predict_point(self.angles(1));
+        P_end   = self.predict_point(self.angles(end));
         points  = [P_start, P_end];
         plot(points(1, :), points(2, :), "o-b");
     end % plot function
@@ -67,7 +67,55 @@ methods %% ---- Member functions -----------------------------------------------
     end % join_seeds_content
 
 
-    function fit_seed(self, scan, i, j)
+    function grow(self, scan)
+
+        i = self.start_index - 1;
+        can_grow = true;
+        while can_grow && i >= 1
+            curr_point = scan.cartesian_points(1:2, i);
+            curr_angle = scan.polar_measures(2, i);
+            
+            if self.point_is_compatible(curr_point, curr_angle)
+                i = i - 1;
+            else
+                can_grow = false;
+            end
+        end
+        i = i+1;
+
+        if i ~= self.start_index 
+            new_data = i:self.start_index - 1;
+            self.data = [scan.cartesian_points(1:2, new_data), self.data];
+            self.angles = [scan.polar_measures(2, new_data), self.angles];
+            self.start_index = i;
+        end
+        
+        i = self.end_index + 1;
+        can_grow = true;
+        while can_grow && i <= size(scan.cartesian_points, 2)
+            curr_point = scan.cartesian_points(1:2, i);
+            curr_angle = scan.polar_measures(2, i);
+            
+            if self.point_is_compatible(curr_point, curr_angle)
+                i = i + 1;
+            else
+                can_grow = false;
+            end
+        end
+        i = i-1;
+
+        if i ~= self.start_index 
+            new_data = self.end_index+1:i;
+            self.data = [self.data, scan.cartesian_points(1:2, new_data)];
+            self.angles = [self.angles, scan.polar_measures(2, new_data)];
+            self.end_index = i;
+        end
+
+        self.fit_seed();
+    end
+
+
+    function fit_seed(self)
         % Given the seeds contents, it computes the line coefficients.
         X = transpose(self.data(1, :));
         Y = transpose(self.data(2, :));
@@ -96,22 +144,27 @@ methods %% ---- Member functions -----------------------------------------------
         % configuration file.
         is_valid = true;
 
-        config  = get_current_configuration();
-        delta   = config.feature_extraction.delta;
-        epsilon = config.feature_extraction.epsilon;
-
         for i = 1:size(self.data, 2)
-            P_meas  = self.data(:, i);
-            P_pred  = self.predict_point(i);
 
-            cond1   = (point_point_distance(P_meas, P_pred) > delta);
-            cond2   = (self.distance_from_point(P_meas) > epsilon);
-            if cond1 || cond2 
+            if ~self.point_is_compatible(self.data(:, i), self.angles(i));
                 is_valid = false;
                 return;
             end
         end
     end % is_valid_seed function
+
+
+    function is_compatible = point_is_compatible(self, point, angle)
+        config      = get_current_configuration();
+        delta       = config.feature_extraction.delta;
+        epsilon     = config.feature_extraction.epsilon;
+
+        point_pred  = self.predict_point(angle);
+
+        cond1       = (point_point_distance(point, point_pred) <= delta);
+        cond2       = (self.distance_from_point(point) <= epsilon);
+        is_compatible = cond1 || cond2;
+    end
 
 
     function joinable = is_joinable_with(self, other)
@@ -136,9 +189,8 @@ methods %% ---- Member functions -----------------------------------------------
     end
 
 
-    function predicted_point = predict_point(self, idx)
+    function predicted_point = predict_point(self, theta)
         % Given the seed, it computes the expected measurement associated to the idx-th angle.
-        theta   = self.angles(idx);
         den     = self.a*cos(theta) + self.b*sin(theta);
 
         predicted_point = [ ...

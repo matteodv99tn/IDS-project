@@ -24,7 +24,14 @@ methods %% ---- Member functions -----------------------------------------------
     end % Camera constructor
 
 
-    function plot(self)
+    function plot(self, RF)
+        OO      = [0; 0; 1];
+        v       = [cos(self.angles); sin(self.angles); ones(1, self.n_points)];
+        data    = RF * [OO, v];
+        plt     = fill(data(1,:), data(2,:), "cyan");
+        plt.EdgeAlpha = 0;
+        plt.FaceAlpha = 0.3;
+
     end % plot function 
 
 

@@ -22,13 +22,16 @@ function seeds = extract_features(scan)
         i = i + 1;
     end
 
+    % figure(1000), hold on;
+    % for i = 1:length(seeds)
+    %     plot(seeds{i});
+    % end
+
 
     % Seed joining 
     can_continue = true;
     while can_continue
-        fprintf("----\n");
         starting_seed_size = size(seeds, 2);
-        fprintf("Starting size: %d\n", starting_seed_size);
         tmp_seeds = seeds;
 
         i = 1;
@@ -45,16 +48,15 @@ function seeds = extract_features(scan)
             i = i + 1;
         end
 
-        fprintf("After processing: %d\n", size(tmp_seeds, 2));
-
         if starting_seed_size == size(tmp_seeds, 2)
-            fprintf("Should terminate\n");
             can_continue = false;
         end
         seeds = tmp_seeds;
     end
 
-
-      
-
+    
+    % Seed growing
+    for i = 1:length(seeds)
+        seeds{i}.grow(scan);
+    end
 end 
