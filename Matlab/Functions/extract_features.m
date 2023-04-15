@@ -14,6 +14,9 @@
           is either good or bad.
 %}
 function [seeds, features, n_removed] = extract_features(scan)
+    features = [];
+    n_removed = 0;
+
     config = get_current_configuration();
 
     n_scan_points   = size(scan.polar_measures, 2);
@@ -41,7 +44,7 @@ function [seeds, features, n_removed] = extract_features(scan)
     % --- Step 2: seed merging
     can_continue = true;
     while can_continue
-        starting_seed_size = size(seeds, 2);
+        starting_seed_size = length(seeds);
         tmp_seeds = seeds;
 
         i = 1;
@@ -72,5 +75,52 @@ function [seeds, features, n_removed] = extract_features(scan)
 
 
     % --- Step 4: seed processing
-    % TODO
+    % Step 4a: remove unnecessary seeds
+    i = 2;
+    while i <= length(seeds)-1 % Processing of overlapping seeds
+        prev = seeds{i-1};
+        next = seeds{i+1};
+
+        if prev.end_index > next.start_index
+            seeds(i) = [];
+        else
+            i = i + 1;
+        end
+    end
+
+    i = 1;
+    while i <= length(seeds) % Removing seeds not respecting the selection criterias
+        
+        seed_len    = seeds{i}.length();
+        seed_n_pts  = seeds{i}.end_index - seeds{i}.start_index;
+
+        cond1       = seed_len < config.feature_extraction.min_seed_length;
+        cond2       = seed_n_pts < config.feature_extraction.min_seed_n_points;
+        if cond1 || cond2 
+            seeds(i) = [];
+        else
+            i = i+1;
+        end
+    end
+
+    % Step 4b: extract the features
+    if seeds{1}.start_index == 1 
+        n_removed = n_removed + 1;
+    else
+        features(:, end+1) = seeds{1}.get_startpoint();
+    end
+
+    for i = 1:length(seeds)-1
+        if seeds{i}.end_index > seeds{i+1}.start_index 
+            features(:, end+1) = seeds{i}.compute_intersection(seeds{i+1});
+        else
+            features = [features, seeds{i}.get_endpoint(), seeds{i+1}.get_startpoint()];
+        end
+    end
+
+    if seeds{end}.end_index == size(scan.cartesian_points, 2)
+        n_removed = n_removed + 1;
+    else 
+        features(:, end+1) = seeds{end}.get_endpoint();
+    end
 end 

@@ -44,6 +44,8 @@ config.feature_extraction.epsilon = 0.03;
 config.feature_extraction.max_alpha = 10 * pi / 180;
 config.feature_extraction.n_point_generation = 6; 
 config.feature_extraction.n_point_back_on_success = 2; 
+config.feature_extraction.min_seed_length = 0.05;
+config.feature_extraction.min_seed_n_points = 8;
 
 % --- Camera parameters
 config.camera.d_max             = 30;                   % maximum recordable distance value

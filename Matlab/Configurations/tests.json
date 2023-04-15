@@ -8,7 +8,9 @@
     "epsilon": 0.0001,
     "max_alpha": 0.087266462599716474,
     "n_point_generation": 6,
-    "n_point_back_on_success": 2
+    "n_point_back_on_success": 2,
+    "min_seed_length": 0.05,
+    "min_seed_n_points": 8
   },
   "camera": {
     "d_max": 30,

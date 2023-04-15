@@ -115,6 +115,37 @@ methods %% ---- Member functions -----------------------------------------------
     end
 
 
+    function P = compute_intersection(self, other) 
+        % Computes the point of intersection between two seeds, implicitly assuming that they are 
+        % overlapping (this check is not performed).
+        A = [ self.a,    self.b; ...
+              other.a,   other.b; ...
+              ];
+        b = [ -self.c; ...
+              -other.c ...
+              ];
+        P = linsolve(A, b);
+    end
+
+
+    function P = get_startpoint(self)
+        % Returns the starting point of the segment
+        P = self.predict_point(self.angles(1));
+    end
+
+
+    function P = get_endpoint(self)
+        % Returns the ending point of the segment
+        P = self.predict_point(self.angles(end));
+    end
+
+
+    function len = length(self)
+        % Computes the length of the seeds based on its endpoints
+        len = point_point_distance(self.get_startpoint(), self.get_endpoint());
+    end
+
+
     function fit_seed(self)
         % Given the seeds contents, it computes the line coefficients.
         X = transpose(self.data(1, :));

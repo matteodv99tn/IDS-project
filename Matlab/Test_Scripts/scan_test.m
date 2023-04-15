@@ -7,7 +7,9 @@ camera  = Camera(pi/3, 41);
 RF      = rototranslation_matrix(-1.3, 1.3, -pi/4);
 %RF      = rototranslation_matrix(-3, 0, 0);
 scan    = Scan(RF, camera, square);
-seeds   = extract_features(scan);
+[seeds, feat, n] = extract_features(scan);
+
+fprintf("Removed %d features\n", n);
 
 figure(1), clf, hold on;
 orig = RF*[0; 0; 1];
@@ -25,6 +27,7 @@ for i = 1:length(seeds)
 end
 xlim([-3, 3]);
 ylim([-3, 3]);
+plot(feat(1, :), feat(2,:), "*r");
 axis equal;
 
 
