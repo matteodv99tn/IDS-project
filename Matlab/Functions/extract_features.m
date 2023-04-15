@@ -1,4 +1,19 @@
-function seeds = extract_features(scan)
+%{
+    This function takes as input a scan and applies an algorithm to detect the features of the scan
+    itself.
+
+    The algorithm is based on a seed generation that are then merged in order to create proper 
+    segments. At the end they are processed in order to obtain the feature.
+
+    The function returns:
+        - seeds: the list of the recognized seed after the growing process;
+        - features: a 2xN matrix containing the cartesian coordinates of the extracted features 
+          after the processing of the seeds;
+        - n_removed: number of removed features from the seeds due to their ineligibility; 
+          this number can give an heuristic idea to the controller if the direction of the camera 
+          is either good or bad.
+%}
+function [seeds, features, n_removed] = extract_features(scan)
     config = get_current_configuration();
 
     n_scan_points   = size(scan.polar_measures, 2);
@@ -7,7 +22,7 @@ function seeds = extract_features(scan)
 
     seeds = {};
 
-    % Seed generation
+    % --- Step 1: seed generation
     i = 1;
     while i < n_scan_points-n_pt_min
         if scan.polar_measures(1, i) ~= config.camera.d_max
@@ -22,13 +37,8 @@ function seeds = extract_features(scan)
         i = i + 1;
     end
 
-    % figure(1000), hold on;
-    % for i = 1:length(seeds)
-    %     plot(seeds{i});
-    % end
 
-
-    % Seed joining 
+    % --- Step 2: seed merging
     can_continue = true;
     while can_continue
         starting_seed_size = size(seeds, 2);
@@ -55,8 +65,12 @@ function seeds = extract_features(scan)
     end
 
     
-    % Seed growing
+    % --- Step 3: seed growing
     for i = 1:length(seeds)
         seeds{i}.grow(scan);
     end
+
+
+    % --- Step 4: seed processing
+    % TODO
 end 

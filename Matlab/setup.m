@@ -36,7 +36,7 @@ datasets = {
 %% --- Default configuration
 
 % --- Simulation parameters
-config.simulation.dt    = 0.001;                            % sampling period for the simulation
+config.simulation.dt    = 0.001;                        % sampling period for the simulation
 
 % --- Feature extraction algorithm
 config.feature_extraction.delta = 0.04;
@@ -46,9 +46,11 @@ config.feature_extraction.n_point_generation = 6;
 config.feature_extraction.n_point_back_on_success = 2; 
 
 % --- Camera parameters
-config.camera.d_max     = 30;                               % maximum recordable distance value
-config.camera.d_std     = 0.02;                             % distance estimation standard deviation
-config.camera.theta_std = 0.1 * pi / 180;                   % angle estimation std
+config.camera.d_max             = 30;                   % maximum recordable distance value
+config.camera.d_std             = 0.02;                 % distance estimation standard deviation
+config.camera.theta_std         = 0.1 * pi / 180;       % angle estimation std;
+config.camera.defaults.fov      = 10 * pi / 180;        % default field of view
+config.camera.defaults.n_points = 101;                  % default amount of points per scan
 
             
 %% --- Export default configuration 

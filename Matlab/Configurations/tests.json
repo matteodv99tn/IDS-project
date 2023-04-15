@@ -13,6 +13,10 @@
   "camera": {
     "d_max": 30,
     "d_std": 0.0,
-    "theta_std": 0.0
+    "theta_std": 0.0,
+    "defaults": {
+      "fov": 0.17453292519943295,
+      "n_points": 101
+    }
   }
 }
