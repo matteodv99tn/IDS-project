@@ -74,6 +74,33 @@ function [seeds, features, n_removed] = extract_features(scan)
     end
 
 
+    % --- Step 3b: seed merging
+    can_continue = true;
+    while can_continue
+        starting_seed_size = length(seeds);
+        tmp_seeds = seeds;
+
+        i = 1;
+        while i < size(tmp_seeds, 2)
+
+            if tmp_seeds{i}.is_joinable_with(tmp_seeds{i+1})
+                joint_seed = Seed(tmp_seeds{i}, tmp_seeds{i+1});
+
+                if joint_seed.is_valid_seed()
+                    tmp_seeds{i} = joint_seed;
+                    tmp_seeds(i+1) = [];
+                end
+            end
+            i = i + 1;
+        end
+
+        if starting_seed_size == size(tmp_seeds, 2)
+            can_continue = false;
+        end
+        seeds = tmp_seeds;
+    end
+
+
     % --- Step 4: seed processing
     % Step 4a: remove unnecessary seeds
     i = 2;
@@ -81,7 +108,7 @@ function [seeds, features, n_removed] = extract_features(scan)
         prev = seeds{i-1};
         next = seeds{i+1};
 
-        if prev.end_index > next.start_index
+        if prev.end_index >= next.start_index
             seeds(i) = [];
         else
             i = i + 1;

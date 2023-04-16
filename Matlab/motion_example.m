@@ -17,18 +17,6 @@ obj     = Square(RF);               % instantiate a square
 scan    = Scan(man, cam, obj);      % create the scan given the initial configuration
 
 
-%% --- Plots of the initial configuration
-figure(2);  % The robot pose and the object
-plot(man);
-plot(obj);
-axis equal
-
-figure(3);  % The computed laserscan
-plot(scan);
-axis equal;
-close all;
-
-
 %% --- Dynamic simulation
 % In this case we use a cartesian point controller, i.e. we specify a required configuration in 
 % cartesian space and the manipulator will achieve it.
@@ -52,21 +40,29 @@ for k = 1:length(t)
 
     if mod(k, 150) == 0
         figure(1), clf;
-        subplot(1, 2, 1);
         plot(man);
         plot(obj);
+        plot(cam, man.EE_frame());
         axis equal;
         title(num2str(t(k)));
         xlim([-1 10]);
         ylim([-7, 10]);
-        subplot(1, 2, 2);
-        scan    = Scan(man, cam, obj);      % create the scan given the initial configuration
+    end
+    if mod(k, 150) == 0
+        figure(2), clf, hold on;
+        scan = Scan(man, cam, obj);      % create the scan given the initial configuration
+        [seeds, feat, ~] = extract_features(scan);
         plot(scan);
+        for j = 1:length(seeds) 
+            plot(seeds{j});
+        end
+        if ~isempty(feat)
+            plot(feat(1,:), feat(2, :), "*r");
+        end
         axis equal;
         xlim([-1 30]);
         ylim([-15, 15]);
     end
-
     % if k == round(length(t)/2)
     %     man.controller.set_target([4; 2; -pi/2]);
     % end
