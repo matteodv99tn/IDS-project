@@ -53,6 +53,10 @@ config.camera.theta_std         = 0.1 * pi / 180;       % angle estimation std;
 config.camera.defaults.fov      = 10 * pi / 180;        % default field of view
 config.camera.defaults.n_points = 101;                  % default amount of points per scan
 
+
+% --- Manipulator parameters 
+config.manipulator.std_position = 0.03 * pi / 180;      % std of the position measurement
+config.manipulator.std_velocity = 0.1 * pi / 180;       % std of the velocity measurement
             
 %% --- Export default configuration 
 file = fopen(fullfile("Configurations", "default.json"), "w");

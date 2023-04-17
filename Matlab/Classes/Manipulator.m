@@ -6,6 +6,12 @@ properties %% ---- Attributes of the class -------------------------------------
     origin;     % origin of the reference frame as 2D vector (x, y components)
     q;          % joint positions vector
     dq;         % joint velocity vector
+    d_true;     % true joint states; stored differently since q, dq will already embedd the 
+    dq_true;    % measurement noise 
+
+    R_q;        % covariance matrix of the joint position noise
+    R_dq;       % covariance matrix of the joint velocity noise
+    R;          % overall covariance matrix
     
     % --- Model parameters
     L1;         
@@ -30,6 +36,7 @@ methods %% ---- Member functions -----------------------------------------------
         %   - L1: length of the first link;
         %   - L2: length of the second link;
         %   - O: origin of the manipulator's reference frame. If not provided, set to (0, 0).
+        config = get_current_configuration();
 
         self.q      = zeros(3, 1);
         self.dq     = zeros(3, 1);
@@ -44,6 +51,10 @@ methods %% ---- Member functions -----------------------------------------------
         
         global dt;
         self.dt     = dt;
+
+        self.R_q    = eye(3) * config.manipulator.std_position;
+        self.R_dq   = eye(3) * config.manipulator.std_velocity;
+        self.R      = blkdiag(self.R_q, self.R_dq);
 
         self.controller = BaseController();
     end % Manipulator constructor
@@ -84,9 +95,11 @@ methods %% ---- Member functions -----------------------------------------------
         M = self.mass_matrix();
         h = self.bias_forces();
 
-        ddq         = linsolve(M, tau - h);
-        self.dq     = self.dq + ddq*self.dt;
-        self.q      = self.q  + self.dq*self.dt;
+        ddq          = linsolve(M, tau - h);
+        self.dq_true = self.dq + ddq*self.dt;
+        self.q_true  = self.q  + self.dq*self.dt;
+        self.q       = self.q_true + mvnrnd(zeros(3,1), self.R_q)';
+        self.dq      = self.dq_true + mvnrnd(zeros(3,1), self.R_dq)';
     end
 
 
