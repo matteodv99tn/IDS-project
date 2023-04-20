@@ -45,6 +45,7 @@ methods %% ---- Member functions -----------------------------------------------
             
             R(1:3, 1:3) = manipulator.R_q;
             for i = 1:size(correspondences, 2)
+                x_corr = correspondences(2:3, i);
                 zi = features(:, correspondences(1, i));
                 Ri = cartesian_covariance_from_polar( ...
                                             zi, ...
@@ -52,18 +53,17 @@ methods %% ---- Member functions -----------------------------------------------
                                             );
                 z(2+2*i:3+2*i) = zi;
                 R(2+2*i:3+2*i, 2+2*i:3+2*i) = Ri;
-                ~, H_q, H_o = inverse_observation_model( ...
+                h, H_q, H_o = direct_observation_model( ...
                                             manipulator, ...
-                                            zi ...
+                                            x(x_corr) ...
                                             );
-                x_corr = correspondences(2:3, i);
                 H(1:3, x_corr) = H_q;
                 H(2+2*i:3+2*i, x_corr) = H_o;
             end
 
             S = H*P*transpose(H) + R;
             W = P*transpose(H)*inv(S);
-            x = x + W*(z - H*x);
+            x = x + W*(z - h);
             P = (eye(dim_x) - W*H)*P;
 
             self.x = x;
@@ -101,6 +101,10 @@ methods %% ---- Member functions -----------------------------------------------
             end
         end
     end % find_correspondences function
+
+
+    function add_state(self, manipulator, feature)
+    end
 
 end % methods
 

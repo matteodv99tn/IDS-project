@@ -7,7 +7,7 @@
 
     The function returns:
         - seeds: the list of the recognized seed after the growing process;
-        - features: a 2xN matrix containing the cartesian coordinates of the extracted features 
+        - features: a 2xN matrix containing the polar coordinates of the extracted features 
           after the processing of the seeds;
         - n_removed: number of removed features from the seeds due to their ineligibility; 
           this number can give an heuristic idea to the controller if the direction of the camera 
@@ -149,5 +149,9 @@ function [seeds, features, n_removed] = extract_features(scan)
         n_removed = n_removed + 1;
     else 
         features(:, end+1) = seeds{end}.get_endpoint();
+    end
+
+    for i = 1:size(features, 2)
+        features(:, i) = cartesian_to_polar(features(:, i));
     end
 end 
