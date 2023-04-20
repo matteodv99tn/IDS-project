@@ -29,22 +29,47 @@ methods %% ---- Member functions -----------------------------------------------
 
         config = get_current_configuration();
 
-        [seeds, features, n_removed] = extract_features(scan);
-        correspondences = self.find_correspondences(manipulator, features);
+        [seeds, features, n_removed]    = extract_features(scan);
+        correspondences                 = self.find_correspondences(manipulator, features);
+        n_correspondences               = size(correspondences, 2);
 
-        x = [manipulator.q; self.x]
-        H = zeros(2*size(correspondences, 2), length(x));
-        z = zeros(2*size(correspondences, 2), 1);
 
-        for i = 1:size(correspondences, 2)
-            h, H_q, H_o = inverse_observation_model( ...
-                                        manipulator, ...
-                                        features(:, correspondences(1, i)) ...
-                                        );
-            H(2*i-1:2*i, 1:3) = H_q;
-            H(2*i-1:2*i, 3 + correspondences(2:3, i)) = H_o;
-            z(2*i-1:2*i) = h;
-        end
+        if n_correspondences > 0
+            dim_x = length(self.x);
+            dim_z = 3 + 2*n_correspondences;
+            x = self.x; 
+            P = self.P;
+            z = zeros(dim_z, 1);
+            H = zeros(dim_z, dim_x);
+            R = zeros(dim_z, dim_z);
+            
+            R(1:3, 1:3) = manipulator.R_q;
+            for i = 1:size(correspondences, 2)
+                zi = features(:, correspondences(1, i));
+                Ri = cartesian_covariance_from_polar( ...
+                                            zi, ...
+                                            camera.polar_covariance ...
+                                            );
+                z(2+2*i:3+2*i) = zi;
+                R(2+2*i:3+2*i, 2+2*i:3+2*i) = Ri;
+                ~, H_q, H_o = inverse_observation_model( ...
+                                            manipulator, ...
+                                            zi ...
+                                            );
+                x_corr = correspondences(2:3, i);
+                H(1:3, x_corr) = H_q;
+                H(2+2*i:3+2*i, x_corr) = H_o;
+            end
+
+            S = H*P*transpose(H) + R;
+            W = P*transpose(H)*inv(S);
+            x = x + W*(z - H*x);
+            P = (eye(dim_x) - W*H)*P;
+
+            self.x = x;
+            self.P = P;
+        end % update step 
+        
 
 
     end % KF_update_step function
