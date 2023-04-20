@@ -57,6 +57,11 @@ config.camera.defaults.n_points = 101;                  % default amount of poin
 % --- Manipulator parameters 
 config.manipulator.std_position = 0.03 * pi / 180;      % std of the position measurement
 config.manipulator.std_velocity = 0.1 * pi / 180;       % std of the velocity measurement
+
+
+% --- Estimator parameters
+config.estimator.buffer_size = 4;
+config.estimator.mahalanobis_th = 3;
             
 %% --- Export default configuration 
 file = fopen(fullfile("Configurations", "default.json"), "w");

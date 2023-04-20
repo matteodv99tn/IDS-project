@@ -11,6 +11,8 @@ function [h, H_q, H_o] = inverse_observation_model(manipulator, observation)
     q3    = manipulator.q(3);
     L1    = manipulator.L1;
     L2    = manipulator.L2;
+    xo    = manipulator.origin(1);
+    yo    = manipulator.origin(2);
     x_obs = observation(1);
     y_obs = observation(2);
 
