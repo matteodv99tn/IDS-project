@@ -48,7 +48,7 @@ config.feature_extraction.min_seed_n_points = 8;
 
 % --- Camera parameters
 config.camera.d_max             = 30;                   % maximum recordable distance value
-config.camera.d_std             = 0.02;                 % distance estimation standard deviation
+config.camera.d_std             = 0.005;                 % distance estimation standard deviation
 config.camera.theta_std         = 0.1 * pi / 180;       % angle estimation std;
 config.camera.defaults.fov      = 10 * pi / 180;        % default field of view
 config.camera.defaults.n_points = 101;                  % default amount of points per scan

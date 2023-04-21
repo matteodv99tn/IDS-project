@@ -22,6 +22,12 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function plot(self)
+        for i = 1:length(self.x) / 2
+            mu = self.x(2*i-1:2*i);
+            sigma = self.P(2*i-1:2*i, 2*i-1:2*i);
+            [x, y] = uncertainty_ellipsoid(mu, sigma);
+            plot(x, y, "b");
+        end
     end % plot function 
 
 

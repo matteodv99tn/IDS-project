@@ -7,7 +7,7 @@ setup;
 
 %% --- Simulation setup
 man     = Manipulator(5,5);         % initialize the manipulator and the camera     
-cam     = Camera(60*pi/180, 101);
+cam     = Camera(60*pi/180, 201);
 man.q   = [pi/2; -pi/2; -pi/2];     % set the init. cond. of the robot (avoiding singular confs.)
 
 t = 0:dt:22;                        % initialize the vector of times
@@ -69,6 +69,7 @@ for k = 1:length(t)
 
         figure(3), clf, hold on;
         plot(obj);
+        plot(map);
         for i = 1:size(feat, 2)
             [z, R] = project_features(man, cam, feat(:, i));
             [x, y] = uncertainty_ellipsoid(z, R);
@@ -77,13 +78,7 @@ for k = 1:length(t)
         axis equal;
         xlim([1 6]);
         ylim([-2, 2]);
-
-
     end
-    % if k == round(length(t)/2)
-    %     man.controller.set_target([4; 2; -pi/2]);
-    % end
-
 end
 
 figure; % joint behavior

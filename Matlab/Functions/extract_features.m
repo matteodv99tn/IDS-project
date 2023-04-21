@@ -153,8 +153,4 @@ function [seeds, features, n_removed] = extract_features(scan)
     else 
         features(:, end+1) = seeds{end}.get_endpoint();
     end
-
-    for i = 1:size(features, 2)
-        features(:, i) = cartesian_to_polar(features(:, i));
-    end
 end 
