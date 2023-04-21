@@ -19,5 +19,13 @@
       "fov": 0.17453292519943295,
       "n_points": 101
     }
+  },
+  "manipulator": {
+    "std_position": 0,
+    "std_velocity": 0
+  },
+  "estimator": {
+    "buffer_size": 4,
+    "mahalanobis_th": 3
   }
 }

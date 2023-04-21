@@ -130,6 +130,9 @@ function [seeds, features, n_removed] = extract_features(scan)
         end
     end
 
+    if length(seeds) == 0
+        return;
+    end
     % Step 4b: extract the features
     if seeds{1}.start_index == 1 
         n_removed = n_removed + 1;

@@ -1,4 +1,4 @@
-classdef MapEstimator
+classdef MapEstimator < handle
 
 properties %% ---- Attributes of the class --------------------------------------------------------
     
@@ -30,35 +30,26 @@ methods %% ---- Member functions -----------------------------------------------
         config = get_current_configuration();
 
         [seeds, features, n_removed]    = extract_features(scan);
-        correspondences                 = self.find_correspondences(manipulator, features);
-        n_correspondences               = size(correspondences, 2);
+        correspondences                 = self.find_correspondences(manipulator, camera, features);
+        n_correspondences               = 0;
+        if ~isempty(correspondences)
+            n_correspondences           = size(correspondences, 2);
+        end
 
 
         if n_correspondences > 0
+            [z, R] = project_features(manipulator, camera, features(:, correspondences(1, :)));
+            dim_z = length(z);
             dim_x = length(self.x);
-            dim_z = 3 + 2*n_correspondences;
             x = self.x; 
             P = self.P;
-            z = zeros(dim_z, 1);
             H = zeros(dim_z, dim_x);
-            R = zeros(dim_z, dim_z);
+            h = zeros(dim_z, 1);
             
-            R(1:3, 1:3) = manipulator.R_q;
             for i = 1:size(correspondences, 2)
                 x_corr = correspondences(2:3, i);
-                zi = features(:, correspondences(1, i));
-                Ri = cartesian_covariance_from_polar( ...
-                                            zi, ...
-                                            camera.polar_covariance ...
-                                            );
-                z(2+2*i:3+2*i) = zi;
-                R(2+2*i:3+2*i, 2+2*i:3+2*i) = Ri;
-                h, H_q, H_o = direct_observation_model( ...
-                                            manipulator, ...
-                                            x(x_corr) ...
-                                            );
-                H(1:3, x_corr) = H_q;
-                H(2+2*i:3+2*i, x_corr) = H_o;
+                h(2*i-1:2*i) = x(x_corr); 
+                H(2*i-1:2*i, x_corr) = eye(2);
             end
 
             S = H*P*transpose(H) + R;
@@ -69,9 +60,17 @@ methods %% ---- Member functions -----------------------------------------------
             self.x = x;
             self.P = P;
         end % update step 
-        
-
-
+    
+        if ~isempty(features)
+            oo = ones(1, size(features, 2));
+            if ~isempty(correspondences)
+                oo(correspondences(1, :)) = 0;
+            end
+            tba = features(:, oo == 1);
+            for i = 1:size(tba, 2)
+                self.add_state(manipulator, camera, tba(:, i));
+            end
+        end
     end % KF_update_step function
 
     
@@ -86,15 +85,12 @@ methods %% ---- Member functions -----------------------------------------------
         %  - the second and third rows contain the indices of the corresponding landmark in the 
         %    state vector.
         
+        config = get_current_configuration();
         correspondences = [];
         
         for i = 1:size(features, 2)
-            h, H_q, H_o = inverse_observation_model(manipulator, features(:, i));
-            H = [H_q, H_o];
-            P = blkdiag(manipulator.R_q, camera.polar_covariance);
-            S = H * P * transpose(H);
-
-            if j = 1:length(self.x)/2
+            [h, S] = project_features(manipulator, camera, features(:, i));
+            for j = 1:length(self.x)/2
                 if mahalanobis_distance(self.x(2*j-1:2*j), h, S) < config.estimator.mahalanobis_th 
                     correspondences(:, end+1) = [i; 2*j-1; 2*j];
                 end
@@ -103,7 +99,14 @@ methods %% ---- Member functions -----------------------------------------------
     end % find_correspondences function
 
 
-    function add_state(self, manipulator, feature)
+    function add_state(self, manipulator, camera, feature)
+        [g, G_q, G_o] = inverse_observation_model(manipulator, feature);
+        R = blkdiag(manipulator.R_q, camera.polar_covariance);
+        G = [G_q, G_o];
+        S = G * R * transpose(G);
+
+        self.x = [self.x; g];
+        self.P = blkdiag(self.P, S);
     end
 
 end % methods

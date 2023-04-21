@@ -6,7 +6,7 @@ properties %% ---- Attributes of the class -------------------------------------
     origin;     % origin of the reference frame as 2D vector (x, y components)
     q;          % joint positions vector
     dq;         % joint velocity vector
-    d_true;     % true joint states; stored differently since q, dq will already embedd the 
+    q_true;     % true joint states; stored differently since q, dq will already embedd the 
     dq_true;    % measurement noise 
 
     R_q;        % covariance matrix of the joint position noise

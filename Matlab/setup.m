@@ -55,8 +55,8 @@ config.camera.defaults.n_points = 101;                  % default amount of poin
 
 
 % --- Manipulator parameters 
-config.manipulator.std_position = 0.03 * pi / 180;      % std of the position measurement
-config.manipulator.std_velocity = 0.1 * pi / 180;       % std of the velocity measurement
+config.manipulator.std_position = 0.0 * pi / 180;      % std of the position measurement
+config.manipulator.std_velocity = 0.0 * pi / 180;       % std of the velocity measurement
 
 
 % --- Estimator parameters
