@@ -38,10 +38,12 @@ methods %% ---- Member functions -----------------------------------------------
         %   - O: origin of the manipulator's reference frame. If not provided, set to (0, 0).
         config = get_current_configuration();
 
-        self.q      = zeros(3, 1);
-        self.dq     = zeros(3, 1);
-        self.L1     = L1;
-        self.L2     = L2;
+        self.q          = zeros(3, 1);
+        self.dq         = zeros(3, 1);
+        self.q_true     = zeros(3, 1);
+        self.dq_true    = zeros(3, 1);
+        self.L1         = L1;
+        self.L2         = L2;
 
         if nargin <= 2
             self.origin = zeros(2,1);
@@ -96,8 +98,8 @@ methods %% ---- Member functions -----------------------------------------------
         h = self.bias_forces();
 
         ddq          = linsolve(M, tau - h);
-        self.dq_true = self.dq + ddq*self.dt;
-        self.q_true  = self.q  + self.dq*self.dt;
+        self.dq_true = self.dq_true + ddq*self.dt;
+        self.q_true  = self.q_true  + self.dq_true*self.dt;
         self.q       = self.q_true + mvnrnd(zeros(3,1), self.R_q)';
         self.dq      = self.dq_true + mvnrnd(zeros(3,1), self.R_dq)';
     end
@@ -189,9 +191,9 @@ methods %% ---- Member functions -----------------------------------------------
 
     function M = mass_matrix(self)
         % Computes the mass matrix of the current configuration
-        q1 = self.q(1);
-        q2 = self.q(2);
-        q3 = self.q(3);
+        q1 = self.q_true(1);
+        q2 = self.q_true(2);
+        q3 = self.q_true(3);
         L1 = self.L1;
         L2 = self.L2;
 
@@ -231,12 +233,12 @@ methods %% ---- Member functions -----------------------------------------------
 
     function h = bias_forces(self)
         % Computes the mass matrix of the current configuration
-        q1 = self.q(1);
-        q2 = self.q(2);
-        q3 = self.q(3);
-        q1__vel = self.dq(1);
-        q2__vel = self.dq(2);
-        q3__vel = self.dq(3);
+        q1 = self.q_true(1);
+        q2 = self.q_true(2);
+        q3 = self.q_true(3);
+        q1__vel = self.dq_true(1);
+        q2__vel = self.dq_true(2);
+        q3__vel = self.dq_true(3);
         L1 = self.L1;
         L2 = self.L2;
 

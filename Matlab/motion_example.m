@@ -6,9 +6,11 @@ setup;
 
 
 %% --- Simulation setup
-man     = Manipulator(5,5);         % initialize the manipulator and the camera     
+man     = Manipulator(5,5);        % initialize the manipulator and the camera     
 cam     = Camera(60*pi/180, 201);
-man.q   = [pi/2; -pi/2; -pi/2];     % set the init. cond. of the robot (avoiding singular confs.)
+
+man.q_true  = [pi/2; -pi/2; -pi/2];     % set the init. cond. of the robot (avoiding singular confs.)
+man.q  = [pi/2; -pi/2; -pi/2];     % set the init. cond. of the robot (avoiding singular confs.)
 
 t = 0:dt:22;                        % initialize the vector of times
 

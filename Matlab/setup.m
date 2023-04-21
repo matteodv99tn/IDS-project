@@ -48,15 +48,15 @@ config.feature_extraction.min_seed_n_points = 8;
 
 % --- Camera parameters
 config.camera.d_max             = 30;                   % maximum recordable distance value
-config.camera.d_std             = 0.005;                 % distance estimation standard deviation
-config.camera.theta_std         = 0.1 * pi / 180;       % angle estimation std;
-config.camera.defaults.fov      = 10 * pi / 180;        % default field of view
-config.camera.defaults.n_points = 101;                  % default amount of points per scan
+config.camera.d_std             = 0.005;                % distance estimation standard deviation
+config.camera.theta_std         = 0.05 * pi / 180;      % angle estimation std;
+config.camera.defaults.fov      = 60 * pi / 180;        % default field of view
+config.camera.defaults.n_points = 151;                  % default amount of points per scan
 
 
 % --- Manipulator parameters 
-config.manipulator.std_position = 0.0 * pi / 180;      % std of the position measurement
-config.manipulator.std_velocity = 0.0 * pi / 180;       % std of the velocity measurement
+config.manipulator.std_position = 0.005 * pi / 180;      % std of the position measurement
+config.manipulator.std_velocity = 0.0001 * pi / 180;       % std of the velocity measurement
 
 
 % --- Estimator parameters
