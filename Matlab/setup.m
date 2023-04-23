@@ -21,7 +21,7 @@ theta_cam_std   = 0.5 * pi / 180;   % 0.5 degrees
 
 
 %% --- Dataset of feasible objects
-datasets = {
+dataset = {
     Rectangle(), ...
     RegularPolygon(3), ... 
     RegularPolygon(4), ...
@@ -38,8 +38,8 @@ datasets = {
 config.simulation.dt    = 0.001;                        % sampling period for the simulation
 
 % --- Feature extraction algorithm
-config.feature_extraction.delta = 0.08;
-config.feature_extraction.epsilon = 0.07;
+config.feature_extraction.delta = 0.03;
+config.feature_extraction.epsilon = 0.02;
 config.feature_extraction.max_alpha = 10 * pi / 180;
 config.feature_extraction.n_point_generation = 6; 
 config.feature_extraction.n_point_back_on_success = 2; 

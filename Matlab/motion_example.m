@@ -15,6 +15,8 @@ man.q  = [pi/2; -pi/2; -pi/2];     % set the init. cond. of the robot (avoiding 
 t = 0:dt:22;                        % initialize the vector of times
 
 RF      = translation_matrix(3, 0); % determine the reference frame where to place the square
+% obj     = dataset{randi(length(dataset))};               
+% obj.RF  = RF;
 obj     = Square(RF);               % instantiate a square
 scan    = Scan(man, cam, obj);      % create the scan given the initial configuration
 
@@ -47,10 +49,10 @@ for k = 1:length(t)
         plot(man);
         plot(obj);
         plot(cam, man.EE_frame());
-        axis equal;
         title(num2str(t(k)));
         xlim([-1 10]);
         ylim([-7, 10]);
+        axis equal;
     end
     if mod(k, 150) == 0
         figure(2), clf, hold on;
@@ -63,9 +65,10 @@ for k = 1:length(t)
         if ~isempty(feat)
             plot(feat(1,:), feat(2, :), "*r");
         end
-        axis equal;
         xlim([-1 30]);
         ylim([-15, 15]);
+        grid on;
+        axis equal;
 
         map.KF_update_step(man, scan, cam);
 
@@ -77,9 +80,10 @@ for k = 1:length(t)
             [x, y] = uncertainty_ellipsoid(z, R);
             plot(x, y, "r");
         end
-        axis equal;
         xlim([1 6]);
         ylim([-2, 2]);
+        grid  on;
+        axis equal;
     end
 end
 

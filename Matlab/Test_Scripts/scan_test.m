@@ -1,38 +1,39 @@
 setup;
+close all;
 clc;
 % configuration_name = "tests";
 
-square  = Square();
-camera  = Camera(pi/3, 41);
-RF      = rototranslation_matrix(-1.3, 1.3, -pi/4);
-%RF      = rototranslation_matrix(-3, 0, 0);
-scan    = Scan(RF, camera, square);
-[seeds, feat, n] = extract_features(scan);
+obj     = dataset{randi(length(dataset))};
+camera  = Camera();
+n_scans = 10;
 
-fprintf("Removed %d features\n", n);
+figure(1);
+for k = 1:n_scans 
+    
+    theta   = 2*pi*rand(1);
+    r       = 2 + 1.5*rand(1);
+    y       = 0.5 * randn(1);
+    delta   = randn(1) * 10 * pi/180;
+    
+    RF      = rotation_matrix(theta) ...
+              * translation_matrix(-r, y) ...
+              * rotation_matrix(delta);
+    scan    = Scan(RF, camera, obj);
+    [seeds, feat, n] = extract_features(scan);
 
-figure(1), clf, hold on;
-orig = RF*[0; 0; 1];
-plot(square);
-% plot(orig(1), orig(2), "+");
-plot(camera, RF);
-axis equal;
-xlim([-3, 3]);
-ylim([-3, 3]);
+    tab = uitab("title", sprintf("Scan %d", k));
+    axes(tab), hold on;
+    plot(scan);
+    for i = 1:length(seeds)
+        plot(seeds{i});
+    end
+    plot(feat(1,:), feat(2,:), 'r*');
 
-figure(2), clf, hold on;
-plot(scan);
-for i = 1:length(seeds)
-    plot(seeds{i});
+    axis equal;
+    grid on;
 end
-xlim([-3, 3]);
-ylim([-3, 3]);
-plot(feat(1, :), feat(2,:), "*r");
-axis equal;
 
 
-% figure(3), clf, hold on;
-% plot(scan)
-% s_orig = seeds{1}
-% s_mod  = seeds{1};
-% s_mod.grow(scan)
+
+
+
