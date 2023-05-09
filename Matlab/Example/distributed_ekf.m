@@ -10,7 +10,7 @@ dt  = 0.1;
 t   = 0:dt:10;
 N   = length(t);
 
-N_robots = 2;
+N_robots = 5;
 robots      = cell(1,N_robots);
 for i = 1:N_robots 
     robots{i}           = Robot(N, dt);
@@ -40,7 +40,7 @@ for k = 1:N
     cellfun(@step_time, robots);
     % cellfun(@(x) x.set_gps_uncertainty(make_pd(0.01*rand(2,2))), robots);
 
-    cellfun(@(x) x.KF_prediction_step(randn(2,1)), robots);
+    cellfun(@(x) x.KF_prediction_step(rand(2,1)), robots);
     cellfun(@(x) x.KF_update_step(), robots); 
 
     [Fi, ai] = cellfun( ...
@@ -65,6 +65,21 @@ for k = 1:N
 
     X_est(:, k) = x_est;
     P_hist(:, :, k) = P_est;
+
+
+
+    figure(3), clf, hold on;
+    for i = 1:N_robots
+        [zzz, CCC] = robots{i}.point_estimate(pt);
+        [plt_x, plt_y] = uncertainty_ellipsoid(zzz, CCC);
+        plot(robots{i});
+        plot(plt_x, plt_y, 'r');
+    end
+    plot(pt(1), pt(2), "*r");
+    xlim([-20, 20]);
+    ylim([-20, 20]);
+    axis equal;
+
 end
 
 Z = cellfun(...
@@ -74,37 +89,42 @@ Z = cellfun(...
         );
 rob = robots{1};
 
-new_figure();
-err = rob.X_hat - rob.X;
-err(3, :) = wrapToPi(err(3, :));
+if false
+    new_figure();
+    err = rob.X_hat - rob.X;
+    err(3, :) = wrapToPi(err(3, :));
 
-titles = {"x", "y", "\theta"};
-for idx = 1:3
-    subplot(3, 1, idx), hold on;
-    x_unc = [t, fliplr(t)];
-    y_unc = 3 * [rob.Sigma(idx, :), fliplr(-rob.Sigma(idx, :))];
-    fill(x_unc, y_unc, 'b', 'FaceAlpha', 0.2, 'EdgeColor', 'none');
-    plot(t, err(idx,:), "LineWidth", 2);
-    title(titles{idx});
-    grid on;
+    titles = {"x", "y", "\theta"};
+    for idx = 1:3
+        subplot(3, 1, idx), hold on;
+        x_unc = [t, fliplr(t)];
+        y_unc = 3 * [rob.Sigma(idx, :), fliplr(-rob.Sigma(idx, :))];
+        fill(x_unc, y_unc, 'b', 'FaceAlpha', 0.2, 'EdgeColor', 'none');
+        plot(t, err(idx,:), "LineWidth", 2);
+        title(titles{idx});
+        grid on;
+    end
 end
 
-new_figure();
-err = X_est - pt;
-unc = squeeze([ ...
-    sqrt(P_hist(1, 1, :)), ...
-    sqrt(P_hist(2, 2, :)) ...
-    ]);
 
-titles = {"x", "y", };
-for idx = 1:2
-    subplot(2, 1, idx), hold on;
-    x_unc = [t, fliplr(t)];
-    y_unc = 3 * [unc(idx, :), fliplr(-unc(idx, :))];
-    fill(x_unc, y_unc, 'b', 'FaceAlpha', 0.2, 'EdgeColor', 'none');
-    plot(t, err(idx,:), "LineWidth", 2);
-    title(titles{idx});
-    grid on;
+if true
+    new_figure();
+    err = X_est - pt;
+    unc = squeeze([ ...
+        sqrt(P_hist(1, 1, :)), ...
+        sqrt(P_hist(2, 2, :)) ...
+        ]);
+
+    titles = {"x", "y", };
+    for idx = 1:2
+        subplot(2, 1, idx), hold on;
+        x_unc = [t, fliplr(t)];
+        y_unc = 3 * [unc(idx, :), fliplr(-unc(idx, :))];
+        fill(x_unc, y_unc, 'b', 'FaceAlpha', 0.2, 'EdgeColor', 'none');
+        plot(t, err(idx,:), "LineWidth", 2);
+        title(titles{idx});
+        grid on;
+    end
 end
 
 

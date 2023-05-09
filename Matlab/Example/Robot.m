@@ -39,6 +39,7 @@ properties
     R_odo;          % covariance matrix of the odometry (for prediction step)
     R_gps;          % covariance matrix of the gps (for update step)   
     R_meas;         % covariance matrix of the object measurement
+    R_mag;
 
     C;
     Z;
@@ -64,6 +65,7 @@ methods
         self.R_odo  = zeros(2, 2);
         self.R_gps  = zeros(2, 2);
         self.R_meas = 0 * diag([0.1, 0.001]);
+        self.R_mag  = 1.4 * pi / 180;
 
         self.Z = [];
         self.C = [];
@@ -73,6 +75,20 @@ methods
 
     end % constructor
     
+
+    function plot(self) 
+
+        [x_true, y_true] = draw_triangle(1, self.x);
+        [x_est, y_est] = draw_triangle(1, self.x_hat);
+        [x_unc, y_unc] = uncertainty_ellipsoid(self.x_hat(1:2), self.P_hat(1:2, 1:2));
+
+        plot(x_true, y_true, "k--");
+        plot(self.x(1), self.x(2), "ko");
+        plot(x_est, y_est, "b");
+        plot(x_unc, y_unc, "b--");
+        
+    end
+
 
     function step_time(self, t)
         if nargin == 2
@@ -112,16 +128,18 @@ methods
     function KF_update_step(self)
         % Update step of the extended Kalman filter
 
-        R = self.R_gps;
-        z = self.x(1:2) + mvnrnd(zeros(2,1), R)'; 
-        H = [ 1, 0, 0;
-              0, 1, 0];
+        R = blkdiag(self.R_gps, self.R_mag);
+        z = [ ...
+            self.x(1:2) + mvnrnd(zeros(2,1), self.R_gps)'; ...
+            self.x(3) + randn(1)*self.R_mag ...
+            ];
+        H = eye(3);
         P = self.P_hat;
         x = self.x_hat;
 
         S = H*P*H' + R;
         W = P*H'*inv(S);
-        x = x + W*(z - x(1:2));
+        x = x + W*(z - x);
         P = (eye(3) - W*H)*P;
 
         self.x_hat(3) = wrap_to_pi(self.x_hat(3));
@@ -233,4 +251,18 @@ function x_new = unicycle_kinematics(x, u, dt)
                 sin(x(3)), 0;
                 0,         1];
     x_new   = A*x + B*u*dt;
+end
+
+function [x, y] = draw_triangle(size, ref_frame)
+    pts = size * [... 
+        1, -1, -1, 1; ...
+        0, -0.5, 0.5, 0; ...
+        1, 1, 1, 1 ...
+        ];
+    M = [cos(ref_frame(3)), -sin(ref_frame(3)), ref_frame(1); ...
+         sin(ref_frame(3)),  cos(ref_frame(3)), ref_frame(2); ...
+         0,                  0,                  1];
+    pts = M * pts;
+    x = pts(1, :);
+    y = pts(2, :);
 end
