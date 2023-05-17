@@ -4,6 +4,7 @@ properties %% ---- Attributes of the class -------------------------------------
     
     x;                          % state of the map 
     P;                          % covariance matrix of the map
+    size;
 
     buffer;
 
@@ -20,7 +21,6 @@ methods %% ---- Member functions -----------------------------------------------
         
     end % MapEstimator constructor
 
-
     function plot(self)
         for i = 1:length(self.x) / 2
             mu = self.x(2*i-1:2*i);
@@ -30,6 +30,18 @@ methods %% ---- Member functions -----------------------------------------------
         end
     end % plot function 
 
+    function xi = get_state_i(self, idx) 
+        xi = self.x(2*idx-1:2*idx);
+    end % get_state_i function 
+
+    function Pi = get_covariance_i(self, idx)
+        Pi = self.P(2*idx-1:2*idx, 2*idx-1:2*idx);
+    end % get_covariance_i function
+
+
+    function n = get_map_size(self) 
+        n = length(self.x) / 2;
+    end % get_map_size function
 
     function KF_update_step(self, manipulator, scan, camera)
 
