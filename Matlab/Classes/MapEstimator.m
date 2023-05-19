@@ -4,7 +4,17 @@ properties %% ---- Attributes of the class -------------------------------------
     
     x;                          % state of the map 
     P;                          % covariance matrix of the map
-    size;
+    z;
+    H;
+    R;
+
+
+    new_observations;
+    x_new;
+    P_new;
+
+    F;
+    a;
 
     buffer;
 
@@ -39,14 +49,75 @@ methods %% ---- Member functions -----------------------------------------------
     end % get_covariance_i function
 
 
-    function n = get_map_size(self) 
+    function n = get_size(self) 
         n = length(self.x) / 2;
     end % get_map_size function
 
-    function KF_update_step(self, manipulator, scan, camera)
+    
+    function eps = get_max_uncertainty(self, idx)
+        % Returns the maximum eigenvalue of the covariance matrix for the i-th
+        % state
+        eps = max(abs(eig(self.get_covariance_i(idx))));
+    end
+    
+    function join(self, arg1, arg2)
+        % Joins either 2 maps or a new state+covariance to the current map
+        
+        if nargin == 2 % We want to join 2 maps 
+            other = arg1; 
+            self.x = [self.x; other.x];
+            self.P = blkdiag(self.P, other.P);
+        end 
+        if nargin == 3 % we want to join a state (with it's covariance)
+            x = arg1;
+            P = arg2;
+            self.x = [self.x; x];
+            self.P = blkdiag(self.P, P);
+        end
+    end
 
+
+    function conditional_join(self, other)
+        %% Join two maps checking for overalapping landmarks 
         config = get_current_configuration();
+        
+        for i = 1:other.get_size() 
+            x_other = other.get_state_i(i);
+            P_other = other.get_covariance_i(i);
+            can_join = true;
 
+            for j = 1:self.get_size() 
+                x_self = self.get_state_i(j);
+                P_self = self.get_covariance_i(j);
+                
+                mh_dist = mahalanobis_distance(x_self, x_other, P_self);
+                if mh_dist < config.estimator.mahalanobis_th 
+                    %% Here perform the WLS
+                    H = [eye(2), eye(2)];
+                    z = [x_self; x_other];
+                    R = blkdiag(P_self, P_other);
+                    Rinv = inv(R);
+
+                    P_self = inv(H' * Rinv * H);
+                    x_self = P_self * H' * Rinv * z;
+
+                    self.x(2*j-1:2*j) = x_self;
+                    self.P(2*j-1:2*j, 2*j-1:2*j) = P_self;
+                    can_join = false;
+                    break;
+                end
+            end
+
+            if can_join
+                self.join(x_other, P_other);
+            end
+        end
+    end
+
+    function process_scan(self, manipulator, scan, camera) 
+
+        %% Process laserscan and generate correspondences
+        config = get_current_configuration();
         [seeds, features, n_removed]    = extract_features(scan);
         correspondences                 = self.find_correspondences(manipulator, camera, features);
         n_correspondences               = 0;
@@ -54,7 +125,7 @@ methods %% ---- Member functions -----------------------------------------------
             n_correspondences           = size(correspondences, 2);
         end
 
-
+        %% Precompute things for the distributed KF update
         if n_correspondences > 0
             [z, R] = project_features( ...
                             manipulator, ...
@@ -64,26 +135,20 @@ methods %% ---- Member functions -----------------------------------------------
             dim_z = length(z);
             dim_x = length(self.x);
             x = self.x; 
-            P = self.P;
             H = zeros(dim_z, dim_x);
             h = zeros(dim_z, 1);
             
             for i = 1:size(correspondences, 2)
-                x_corr = correspondences(2:3, i);
-                h(2*i-1:2*i) = x(x_corr); 
                 H(2*i-1:2*i, x_corr) = eye(2);
             end
 
-            S = H*P*transpose(H) + R;
-            W = P*transpose(H)*inv(S);
-            x = x + W*(z - h);
-            P = (eye(dim_x) - W*H)*P;
-
-            self.x = x;
-            self.P = P;
+            self.z = z; 
+            self.H = H;
+            self.R = R;
         end % update step 
-        
-        % Add unused information to buffer
+        self.build_composite_informations();
+
+        %% Add unused information to buffer
         new_obs = ones(1, size(features, 2)); 
         if ~isempty(correspondences)
             new_obs(correspondences(1, :)) = 0;
@@ -108,6 +173,37 @@ methods %% ---- Member functions -----------------------------------------------
             self.buffer(1) = [];
             self.process_buffer();
         end
+    end
+
+    
+    function build_composite_informations(self) 
+        H      = self.H;
+        R      = self.R;
+        z      = self.z;
+        Rinv   = inv(R);
+        F      = H' * Rinv * H;
+        a      = H' * Rinv * z;
+        self.F = F;
+        self.a = a;
+    end
+
+
+        function [F, a] = get_composite_informations(self);
+            F = self.F;
+            a = self.a;
+        end
+
+
+    function linear_consensus(self, F_other, a_other, q_self, q_other)
+        self.F = self.F*q_self + F_other*q_other;
+        self.a = self.a*q_self + a_other*q_other;
+    end
+
+    function KF_update_step(self, N)
+        % N = Number of robots 
+        P = inv(self.P + N*self.F);     
+        self.x = P * (self.P*self.x + N*self.a); 
+        self.P = P;
     end % KF_update_step function
 
     
@@ -147,7 +243,11 @@ methods %% ---- Member functions -----------------------------------------------
 
     
     function process_buffer(self)
+        self.new_observations = MapEstimator();
+        self.x_new = [];
+        self.P_new = [];
         config = get_current_configuration();
+
         idx_obs = 1;
         while idx_obs  <= size(self.buffer{end}.z, 2)
             z_curr = self.buffer{end}.z(:, idx_obs);
@@ -171,8 +271,7 @@ methods %% ---- Member functions -----------------------------------------------
 
 
             if is_valid
-                self.x = [self.x; z_curr];
-                self.P = blkdiag(self.P, R_curr);
+                self.new_observations.join(z_curr, R_curr);
                 self.buffer{end}.z(:, idx_obs) = [];
                 self.buffer{end}.R(:, :, idx_obs) = [];
                 idx_obs = idx_obs - 1;

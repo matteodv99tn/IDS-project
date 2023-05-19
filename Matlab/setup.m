@@ -62,6 +62,13 @@ config.manipulator.std_velocity = 0.0001 * pi / 180;       % std of the velocity
 % --- Estimator parameters
 config.estimator.buffer_size = 4;
 config.estimator.mahalanobis_th = 3;
+
+% --- Motion planner
+config.planner.search_th = 0.1;
+config.planner.r_target = 0.1;
+config.planner.v_des = 0.4;
+config.planner.kp_radial = 0.5;
+
             
 %% --- Export default configuration 
 file = fopen(fullfile("Configurations", "default.json"), "w");
