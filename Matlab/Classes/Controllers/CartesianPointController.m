@@ -19,8 +19,8 @@ methods %% ---- Member functions -----------------------------------------------
         
         compute_tau@BaseController(self);
 
-        x_meas  = manipulator.get_EE_state();
-        dx_meas = manipulator.get_EE_velocity();
+        x_meas  = manipulator.get_EE_state(true);
+        dx_meas = manipulator.get_EE_velocity(true);
         
         if self.k == 0
             x_des   = self.target;
@@ -38,15 +38,15 @@ methods %% ---- Member functions -----------------------------------------------
             self.k  = self.k + 1;
         end
 
-        x_pos = manipulator.get_EE_state();
-        x_vel = manipulator.get_EE_velocity();
+        x_pos = manipulator.get_EE_state(true);
+        x_vel = manipulator.get_EE_velocity(true);
         x_ref = self.target;
         
         ddx     = ddx_des + self.Kd*(dx_des-dx_meas) + self.Kp*(x_des-x_meas);
 
-        J       = manipulator.EE_jacobian();
-        M       = manipulator.mass_matrix();
-        h       = manipulator.bias_forces();
+        J       = manipulator.EE_jacobian(true);
+        M       = manipulator.mass_matrix(true);
+        h       = manipulator.bias_forces(true);
         Lambda  = (J * M^(-1) * transpose(J))^(-1);
         mu      = Lambda * J * M^(-1) * h;
         tau     = transpose(J) * (Lambda*ddx + mu);

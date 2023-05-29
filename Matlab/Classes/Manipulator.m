@@ -14,6 +14,11 @@ properties %% ---- Attributes of the class -------------------------------------
     R_q;        % covariance matrix of the joint position noise
     R_dq;       % covariance matrix of the joint velocity noise
     R;          % overall covariance matrix
+
+    error = [];
+    d_error = [];
+    sigma = [];
+    d_sigma = [];
     
     % --- Model parameters
     L1;         
@@ -57,7 +62,7 @@ methods %% ---- Member functions -----------------------------------------------
         global dt;
         self.dt     = dt;
         
-        self.Q_tau  = eye(3) * 10;
+        self.Q_tau  = eye(3) * 1;
         self.R_q    = eye(3) * config.manipulator.std_position;
         self.R_dq   = eye(3) * config.manipulator.std_velocity;
         self.R      = blkdiag(self.R_q, self.R_dq);
@@ -100,21 +105,21 @@ methods %% ---- Member functions -----------------------------------------------
     function update_kinematic_dynamics(self) 
 
         % Compute torque 
-        tau_applied = self.controller.compute_tau(self)
+        tau_applied = self.controller.compute_tau(self);
         tau_meas    = tau_applied + transpose(mvnrnd(zeros(3,1), self.Q_tau));
 
         % Apply torque and update dynamics
         M = self.mass_matrix(false);
         h = self.bias_forces(false);
         qdd = linsolve(M, tau_applied - h);
-        self.dq_true = self.qd_true + qdd*self.dt;
+        self.dq_true = self.dq_true + qdd*self.dt;
         self.q_true = self.q_true + self.dq_true*self.dt;
 
         % KF prediction step
         M = self.mass_matrix(true);
         h = self.bias_forces(true);
-        qdd = linsolve(M, tau_measured - h);
-        self.dq_est = self.qd_est + qdd*self.dt;
+        qdd = linsolve(M, tau_meas - h);
+        self.dq_est = self.dq_est + qdd*self.dt;
         self.q_est = self.q_est + self.dq_est*self.dt;
         A = self.jacobian_dynamic_states(true);
         B = self.jacobian_dynamic_inputs(true);
@@ -126,11 +131,16 @@ methods %% ---- Member functions -----------------------------------------------
         H = zeros(3, 6);
         H(:, 1:3) = eye(3);
         S = H*self.P*transpose(H) + self.R_q;
-        W = self.P * transpose(H) * inverse(S);
-        x = x + W(q_meas - H*x)
+        W = self.P * transpose(H) * inv(S);
+        x = x + W*(q_meas - H*x);
         self.P = (eye(6) - W*H) * self.P;
-        self.q_est = x(1:3);
-        self.dq_est = x(4:6);
+        self.q_est(1:3, 1) = x(1:3);
+        self.dq_est(1:3, 1) = x(4:6);
+
+        self.error = [self.error, self.q_est - self.q_true];
+        self.d_error = [self.d_error, self.dq_est - self.dq_true];
+        self.sigma = [self.sigma, real(sqrt(diag(self.P(1:3, 1:3))))];
+        self.d_sigma = [self.d_sigma, real(sqrt(diag(self.P(4:6, 4:6))))];
     end
 
 
@@ -627,6 +637,7 @@ methods %% ---- Member functions -----------------------------------------------
         A(3, 4) = res__3_4;
         A(3, 5) = res__3_5;
         A(3, 6) = res__3_6;
+        A(4:6, :) = self.dt * A(1:3, :);
         A(1:3, 1:3) = eye(3);
         A(1:3, 4:6) = self.dt * eye(3);
     end
@@ -652,7 +663,7 @@ methods %% ---- Member functions -----------------------------------------------
 
         B = zeros(6, 3);
         M = self.mass_matrix(estimated);
-        B(4:6, :) = inverse(M);
+        B(4:6, :) = inv(M);
     end
 end % methods
 

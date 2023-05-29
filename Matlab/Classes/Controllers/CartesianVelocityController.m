@@ -3,10 +3,10 @@ classdef CartesianVelocityController < BaseController
 properties %% ---- Attributes of the class --------------------------------------------------------
 
 
-    Kp = 10*eye(3);
+    Kp = 1000*eye(3);
     Ki = 1*eye(3);
     acc_err = zeros(3,1);
-    clip_th = [0.3; 0.3; 0.1];
+    clip_th = 10*[0.3; 0.3; 0.1];
 
 end % properties
 
@@ -21,7 +21,7 @@ methods %% ---- Member functions -----------------------------------------------
         
         compute_tau@BaseController(self);
 
-        vel_meas        = manipulator.get_EE_velocity();
+        vel_meas        = manipulator.get_EE_velocity(true);
         vel_ref         = self.target;
         err             = vel_ref - vel_meas;
         self.acc_err    = self.acc_err + err*self.dt;
@@ -29,12 +29,13 @@ methods %% ---- Member functions -----------------------------------------------
 
         self.clip_integral_error();
 
-        J       = manipulator.EE_jacobian();
-        M       = manipulator.mass_matrix();
-        h       = manipulator.bias_forces();
+        J       = manipulator.EE_jacobian(true);
+        M       = manipulator.mass_matrix(true);
+        h       = manipulator.bias_forces(true);
         Lambda  = (J * M^(-1) * transpose(J))^(-1);
         mu      = Lambda * J * M^(-1) * h;
         tau     = transpose(J) * (Lambda*ddx + mu);
+        % tau = M * inv(J) * ddx + h;
     end
 
 

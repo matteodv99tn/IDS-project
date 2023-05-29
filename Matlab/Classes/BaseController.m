@@ -43,6 +43,9 @@ methods %% ---- Member functions -----------------------------------------------
     function set_target(self, target)
         self.k = 0;
         self.target = target;
+        if size(target, 1) == 1
+            self.target = transpose(self.target);
+        end
     end
 
 
