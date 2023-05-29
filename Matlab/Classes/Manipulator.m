@@ -81,6 +81,12 @@ methods %% ---- Member functions -----------------------------------------------
     end % plot function overload
 
 
+    function set_initial_joint_config(self, q0)
+        % Sets the initial joint configuration to the provided value
+        self.q      = q0;
+        self.q_true = q0;
+    end
+
     function set_controller(self, controller)
         self.controller = controller;
     end

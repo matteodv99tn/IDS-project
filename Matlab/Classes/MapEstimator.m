@@ -188,10 +188,10 @@ methods %% ---- Member functions -----------------------------------------------
     end
 
 
-        function [F, a] = get_composite_informations(self);
-            F = self.F;
-            a = self.a;
-        end
+    function [F, a] = get_composite_informations(self);
+        F = self.F;
+        a = self.a;
+    end
 
 
     function linear_consensus(self, F_other, a_other, q_self, q_other)
