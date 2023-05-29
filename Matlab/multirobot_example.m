@@ -22,7 +22,7 @@ plot(man2);
 man1.set_controller(CartesianVelocityController());
 man2.set_controller(CartesianPointController());
 % man1.controller.enqueue_target([0; 3; 0], 8);
-man2.controller.enqueue_target([7; 3; pi], 8);
+man2.controller.enqueue_target([7; 3; pi], 5);
 
 man1.controller.set_target(1*[1, -1, 0]);
 
@@ -31,9 +31,8 @@ man1.controller.set_target(1*[1, -1, 0]);
 
 
 for k = 1:length(t)
-    man1.update_control_law();
-    man2.update_control_law();
-
+    man1.update_kinematic_dynamics();
+    man2.update_kinematic_dynamics();
     if mod(k, 50) == 0
         figure(1), clf;
         plot(man1);
