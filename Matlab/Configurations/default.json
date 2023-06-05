@@ -21,8 +21,8 @@
     }
   },
   "manipulator": {
-    "std_position": 8.7266462599716482E-5,
-    "std_velocity": 1.7453292519943294E-6
+    "std_position": 0.0008726646259971648,
+    "std_velocity": 0.0008726646259971648
   },
   "estimator": {
     "buffer_size": 4,

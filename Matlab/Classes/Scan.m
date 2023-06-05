@@ -21,7 +21,7 @@ methods %% ---- Member functions -----------------------------------------------
         % Here I assume that if the manipulator argument is not an actual manipulator, then it's 
         % a reference frame where the camera is placed
         if class(manipulator) == "Manipulator"
-            RF_camera = manipulator.EE_frame();
+            RF_camera = manipulator.EE_frame(false);
         else
             RF_camera = manipulator;
         end

@@ -130,9 +130,13 @@ methods %% ---- Member functions -----------------------------------------------
         x = [self.q_est; self.dq_est];
         H = zeros(3, 6);
         H(:, 1:3) = eye(3);
-        S = H*self.P*transpose(H) + self.R_q;
+        dq_meas = self.dq_true + transpose(mvnrnd(zeros(3,1), self.R_dq));
+        z = [q_meas; dq_meas];
+        H = eye(6);
+        R = blkdiag(self.R_q, self.R_dq);
+        S = H*self.P*transpose(H) + R;
         W = self.P * transpose(H) * inv(S);
-        x = x + W*(q_meas - H*x);
+        x = x + W*(z - H*x);
         self.P = (eye(6) - W*H) * self.P;
         self.q_est(1:3, 1) = x(1:3);
         self.dq_est(1:3, 1) = x(4:6);
@@ -640,6 +644,7 @@ methods %% ---- Member functions -----------------------------------------------
         A(4:6, :) = self.dt * A(1:3, :);
         A(1:3, 1:3) = eye(3);
         A(1:3, 4:6) = self.dt * eye(3);
+        A(4:6, 4:6) = A(4:6, 4:6) + eye(3);
     end
 
 

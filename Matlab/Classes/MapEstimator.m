@@ -22,10 +22,13 @@ end % properties
 
 methods %% ---- Member functions ------------------------------------------------------------------
 
-    function self = MapEstimator()
+    function self = MapEstimator(stop_exec)
 
         self.x = [];
         self.P = [];
+        if nargin < 1
+            self.new_observations = MapEstimator(true);
+        end
 
         self.buffer = {};
         
@@ -139,6 +142,8 @@ methods %% ---- Member functions -----------------------------------------------
             h = zeros(dim_z, 1);
             
             for i = 1:size(correspondences, 2)
+                x_corr = correspondences(2:3, i);
+                h(2*i-1:2*i) = x(x_corr);
                 H(2*i-1:2*i, x_corr) = eye(2);
             end
 
