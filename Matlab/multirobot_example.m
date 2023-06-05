@@ -9,8 +9,8 @@ t = 0:dt:10;
 origin1 = [-3; 0];
 origin2 = [3; 1];
 q0_man1 = [160; -130; -30]*pi/180;
-man1 = Manipulator(1, 1, origin1);
-man2 = Manipulator(1, 1, origin2);
+man1 = Manipulator(2, 2, origin1);
+man2 = Manipulator(2, 2, origin2);
 man1.set_initial_joint_config(q0_man1)
 man2.set_initial_joint_config([0; 1; -1]) % 2*pi*rand(3, 1))
 
@@ -28,10 +28,14 @@ plot(man2);
 
 
 %% --- Reach default target
-man1.set_controller(CartesianVelocityController());
-man2.set_controller(CartesianVelocityController());
-man1.controller.set_target([0; 0; 0]);
-man2.controller.set_target([0; 0; 0]);
+% man1.set_controller(CartesianVelocityController());
+% man2.set_controller(CartesianVelocityController());
+% man1.controller.set_target([0; 0; 0]);
+% man2.controller.set_target([0; 0; 0]);
+man1.set_controller(CartesianPointController());
+man2.set_controller(CartesianPointController());
+man1.controller.enqueue_target([-2, 2, -pi/4], 8);
+man2.controller.enqueue_target([2, 4, pi + pi/3], 8);
 
 map1 = MapEstimator();
 map2 = MapEstimator();
@@ -57,10 +61,15 @@ for k = 1:length(t)
         [F1, a1] = map1.get_composite_informations();
         [F2, a2] = map2.get_composite_informations();
 
-        % First linear consensus step
-        map2.linear_consensus(F1, a1, 1/2, 1/2);
-        % Second linear consensus step
-        map1.linear_consensus(F2, a2, 2/3, 1/3);
+        for i_cons = 1:2
+            % First linear consensus step
+            map2.linear_consensus(F1, a1, 1/2, 1/2);
+            % Second linear consensus step
+            map1.linear_consensus(F2, a2, 2/3, 1/3);
+        end
+
+        map1.KF_update_step(2);
+        map2.KF_update_step(2);
 
         newmap1 = map1.new_observations;
         newmap2 = map2.new_observations;
@@ -74,6 +83,19 @@ for k = 1:length(t)
         map2.join(newmap2);
         fprintf("Map1 size: %d\n", map1.get_size());
         fprintf("Map2 size: %d\n", map2.get_size());
+
+
+
+        figure(4), clf, hold on;
+        xlim([-4, 4]);
+        ylim([-4, 4]);
+        plot(map1);
+        axis equal;
+        figure(5), clf, hold on;
+        axis equal;
+        xlim([-4, 4]);
+        ylim([-4, 4]);
+        plot(map2);
  
    end
 

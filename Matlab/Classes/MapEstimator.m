@@ -35,12 +35,15 @@ methods %% ---- Member functions -----------------------------------------------
     end % MapEstimator constructor
 
     function plot(self)
-        for i = 1:length(self.x) / 2
-            mu = self.x(2*i-1:2*i);
-            sigma = self.P(2*i-1:2*i, 2*i-1:2*i);
+        for i = 1:self.get_size()
+            mu = self.get_state_i(i);
+            sigma = self.get_covariance_i(i);
             [x, y] = uncertainty_ellipsoid(mu, sigma);
             plot(x, y, "b");
         end
+        x = self.z(1:2:end);
+        y = self.z(2:2:end);
+        plot(x, y, "*r");
     end % plot function 
 
     function xi = get_state_i(self, idx) 
@@ -96,7 +99,7 @@ methods %% ---- Member functions -----------------------------------------------
                 mh_dist = mahalanobis_distance(x_self, x_other, P_self);
                 if mh_dist < config.estimator.mahalanobis_th 
                     %% Here perform the WLS
-                    H = [eye(2), eye(2)];
+                    H = [eye(2); eye(2)];
                     z = [x_self; x_other];
                     R = blkdiag(P_self, P_other);
                     Rinv = inv(R);
@@ -128,6 +131,13 @@ methods %% ---- Member functions -----------------------------------------------
             n_correspondences           = size(correspondences, 2);
         end
 
+        dim_z = length(self.x); 
+        dim_x = length(self.x);
+        H = eye(dim_z);
+        h = self.x;
+        z = zeros(dim_z, 1);
+        R = 10e6 * eye(dim_z);
+
         %% Precompute things for the distributed KF update
         if n_correspondences > 0
             [z, R] = project_features( ...
@@ -135,22 +145,22 @@ methods %% ---- Member functions -----------------------------------------------
                             camera, ...
                             features(:, correspondences(1, :)) ...
                             );
-            dim_z = length(z);
-            dim_x = length(self.x);
-            x = self.x; 
-            H = zeros(dim_z, dim_x);
-            h = zeros(dim_z, 1);
+            z_old = z;
+            R_old = R;
+
+            z = zeros(dim_z, 1);
+            R = 10e6 * eye(dim_z);
             
             for i = 1:size(correspondences, 2)
                 x_corr = correspondences(2:3, i);
-                h(2*i-1:2*i) = x(x_corr);
-                H(2*i-1:2*i, x_corr) = eye(2);
+                z(x_corr) = z_old(2*i-1:2*i);
+                R(x_corr, x_corr) = R_old(2*i-1:2*i, 2*i-1:2*i);
             end
 
-            self.z = z; 
-            self.H = H;
-            self.R = R;
         end % update step 
+        self.z = z; 
+        self.H = H;
+        self.R = R;
         self.build_composite_informations();
 
         %% Add unused information to buffer
@@ -190,6 +200,9 @@ methods %% ---- Member functions -----------------------------------------------
         a      = H' * Rinv * z;
         self.F = F;
         self.a = a;
+        if size(a, 2) > 1 
+            warning("SIZE ERROR")
+        end
     end
 
 
@@ -206,6 +219,9 @@ methods %% ---- Member functions -----------------------------------------------
 
     function KF_update_step(self, N)
         % N = Number of robots 
+        if size(self.a, 2) > 1 
+            warning("Invalid size");
+        end
         P = inv(self.P + N*self.F);     
         self.x = P * (self.P*self.x + N*self.a); 
         self.P = P;
