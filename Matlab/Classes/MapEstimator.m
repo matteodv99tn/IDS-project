@@ -73,6 +73,16 @@ methods %% ---- Member functions -----------------------------------------------
     end % get_map_size function
 
 
+    function c = centroid(self)
+        n = self.get_size();
+        pts = zeros(2, n);
+        for i = 1:n
+            pts(:, i) = self.get_state_i(i);
+        end
+        c = mean(pts, 2);
+    end
+
+
     function eps = get_max_uncertainty(self, idx)
         % Returns the maximum eigenvalue of the covariance matrix for the i-th
         % state

@@ -2,12 +2,12 @@ classdef Manipulator < handle
 
 
 properties %% ---- Attributes of the class --------------------------------------------------------
-    
+
     origin;     % origin of the reference frame as 2D vector (x, y components)
     q_est;      % joint positions vector estimate
     dq_est;     % joint velocity vector estimate
-    q_true;     % true joint states; stored differently since q, dq will already embedd the 
-    dq_true;    % me asurement noise 
+    q_true;     % true joint states; stored differently since q, dq will already embedd the
+    dq_true;    % me asurement noise
     P;
 
     Q_tau;      % covariance matrix on joint torque measure
@@ -19,18 +19,18 @@ properties %% ---- Attributes of the class -------------------------------------
     d_error = [];
     sigma = [];
     d_sigma = [];
-    
+
     % --- Model parameters
-    L1;         
+    L1;
     L2;
 
-    % --- Controller 
+    % --- Controller
     controller;
 
-    % --- Other parameters 
+    % --- Other parameters
     dt;
 
-    
+
 end % properties
 
 
@@ -55,13 +55,13 @@ methods %% ---- Member functions -----------------------------------------------
 
         if nargin <= 2
             self.origin = zeros(2,1);
-        else 
+        else
             self.origin = O;
         end
-        
+
         global dt;
         self.dt     = dt;
-        
+
         self.Q_tau  = eye(3) * 1;
         self.R_q    = eye(3) * config.manipulator.std_position;
         self.R_dq   = eye(3) * config.manipulator.std_velocity;
@@ -102,9 +102,9 @@ methods %% ---- Member functions -----------------------------------------------
     end
 
 
-    function update_kinematic_dynamics(self) 
+    function update_kinematic_dynamics(self)
 
-        % Compute torque 
+        % Compute torque
         tau_applied = self.controller.compute_tau(self);
         tau_meas    = tau_applied + transpose(mvnrnd(zeros(3,1), self.Q_tau));
 
@@ -150,6 +150,18 @@ methods %% ---- Member functions -----------------------------------------------
     end
 
 
+    function points = get_voronoi_points(self)
+        q1 = self.q_est(1);
+        q2 = self.q_est(2);
+
+        p1 = self.origin';
+        p2 = p1 + self.L1 * [cos(q1), sin(q1)];
+        p3 = p2 + self.L2 * [cos(q1+q2), sin(q1+q2)];
+
+        points = [p1; p2; p3];
+    end
+
+
     function EE = get_EE_state(self, estimated)
         % Return the sate of the end effector, i.e. the cartesian coordinates wrt world as well as
         % it's heading.
@@ -175,9 +187,9 @@ methods %% ---- Member functions -----------------------------------------------
 
     function RF_EE = EE_frame(self, estimated)
         % Computes the reference frame of the end effector given the current configuration
-        if estimated  
+        if estimated
             q = self.q_est;
-        else 
+        else
             q = self.q_true;
         end
         q1  = q(1);
@@ -188,7 +200,7 @@ methods %% ---- Member functions -----------------------------------------------
         xo  = self.origin(1);
         yo  = self.origin(2);
 
-        % Maple generated code 
+        % Maple generated code
         t1 = cos(q1);
         t2 = cos(q2);
         t4 = sin(q1);
@@ -219,9 +231,9 @@ methods %% ---- Member functions -----------------------------------------------
 
     function J_EE = EE_jacobian(self, estimated)
         % Jacobian of the end effector (wrt the joints) given the current robot configuration
-        if estimated  
+        if estimated
             q = self.q_est;
-        else 
+        else
             q = self.q_true;
         end
         q1  = q(1);
@@ -230,7 +242,7 @@ methods %% ---- Member functions -----------------------------------------------
         L1  = self.L1;
         L2  = self.L2;
 
-        % Maple generated code 
+        % Maple generated code
         t1 = cos(q2);
         t3 = -t1 * L2 - L1;
         t4 = sin(q1);
@@ -258,9 +270,9 @@ methods %% ---- Member functions -----------------------------------------------
 
     function M = mass_matrix(self, estimated)
         % Computes the mass matrix of the current configuration
-        if estimated  
+        if estimated
             q = self.q_est;
-        else 
+        else
             q = self.q_true;
         end
         q1 = q(1);
@@ -305,10 +317,10 @@ methods %% ---- Member functions -----------------------------------------------
 
     function h = bias_forces(self, estimated)
         % Computes the mass matrix of the current configuration
-        if estimated  
+        if estimated
             q = self.q_est;
             dq = self.dq_est;
-        else 
+        else
             q = self.q_true;
             dq = self.dq_true;
         end
@@ -346,10 +358,10 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function A = jacobian_dynamic_states(self, estimated)
-        if estimated  
+        if estimated
             q = self.q_est;
             dq = self.dq_est;
-        else 
+        else
             q = self.q_true;
             dq = self.dq_true;
         end
@@ -651,10 +663,10 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function B = jacobian_dynamic_inputs(self, estimated)
-        if estimated  
+        if estimated
             q = self.q_est;
             dq = self.dq_est;
-        else 
+        else
             q = self.q_true;
             dq = self.dq_true;
         end

@@ -10,7 +10,7 @@ t = 0:dt:100;
 systems  = {
     System([3; 0]); ...
     System([-3; 0]); ...
-    System([0, -7]); ...
+    System([0; -5]); ...
     };
 N_robots = length(systems);
 Q = ones(N_robots) / N_robots;
@@ -25,17 +25,20 @@ for k = 1:length(t)
 
 
         % --- Voronoi map update
-        EE_positions = zeros(N_robots, 2);
+        voronoi_points = zeros(3*N_robots, 2);
         for i = 1:N_robots
-            tmp = systems{i}.manipulator.get_EE_state(true);
-            EE_positions(i, :) = tmp(1:2);
+            voronoi_points(3*i-2:3*i, :) = systems{i}.manipulator.get_voronoi_points();
         end
-        [V, R] = ClippedVoronoi(EE_positions);
+        [V, R] = ClippedVoronoi(voronoi_points);
 
-        % for i = 1:N_robots
-        %     poly = V([R{i}, R{i}(1)], :);
-        %     systems{i}.planner.allowed_region = poly;
-        % end
+        for i = 1:N_robots
+            p1 = polyshape(V(R{3*i-2},:));
+            p2 = polyshape(V(R{3*i-1},:));
+            p3 = polyshape(V(R{3*i},:));
+            ptmp = union(p1, p2);
+            poly = union(ptmp, p3);
+            systems{i}.planner.allowed_region = poly.Vertices;
+        end
 
 
 
@@ -59,7 +62,6 @@ for k = 1:length(t)
         cellfun(@(sys) plot(sys.manipulator), systems);
         plot(obj);
         plot(systems{1}.map);
-        voronoi(EE_positions(:, 1), EE_positions(:, 2));
     end
 
 end

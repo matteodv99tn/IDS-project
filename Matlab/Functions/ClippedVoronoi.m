@@ -32,8 +32,30 @@ function [V, R] = ClippedVoronoi(P)
             idx_left  = find_childs(R{i}(2));
             idx_right = find_childs(R{i}(end));
 
-            R{i}(1) = idx_left;
-            R{i}(end+1) = idx_right;
+            if length(R{i}) == 2
+                R{i}(1) = idx_left(1);
+                R{i}(end+1) = idx_left(2);
+            else
+                if length(idx_left) == 1
+                    R{i}(1) = idx_left;
+                else
+                    candidates = V(idx_left, :);
+                    delta = candidates - P(i, :);
+                    dist = sqrt(delta(:, 1).^2 + delta(:, 2).^2);
+                    [~, idx] = min(dist);
+                    R{i}(1) = idx_left(idx);
+                end
+
+                if length(idx_right) == 1
+                    R{i}(end+1) = idx_right;
+                else
+                    candidates = V(idx_right, :);
+                    delta = candidates - P(i, :);
+                    dist = sqrt(delta(:, 1).^2 + delta(:, 2).^2);
+                    [~, idx] = min(dist);
+                    R{i}(end+1) = idx_right(idx);
+                end
+            end
         end
     end
 
@@ -56,9 +78,9 @@ function [V, R] = ClippedVoronoi(P)
         end
 
         valid_childs = find(all_childs >= N_original);
-        if size(valid_childs, 1) ~= 1 || size(valid_childs, 2) ~= 1
-            error('Something went wrong');
-        end
+        % if size(valid_childs, 1) ~= 1 || size(valid_childs, 2) ~= 1
+        %     error('Something went wrong');
+        % end
 
         childs = all_childs(valid_childs);
     end % find_childs
