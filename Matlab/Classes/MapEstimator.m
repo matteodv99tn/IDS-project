@@ -1,8 +1,8 @@
 classdef MapEstimator < handle
 
 properties %% ---- Attributes of the class --------------------------------------------------------
-    
-    x;                          % state of the map 
+
+    x;                          % state of the map
     P;                          % covariance matrix of the map
     z;
     H;
@@ -15,6 +15,8 @@ properties %% ---- Attributes of the class -------------------------------------
 
     F;
     a;
+    z_tmp;
+    R_tmp;
 
     buffer;
 
@@ -31,7 +33,10 @@ methods %% ---- Member functions -----------------------------------------------
         end
 
         self.buffer = {};
-        
+
+        self.z_tmp = [];
+        self.R_tmp = [];
+
     end % MapEstimator constructor
 
     function plot(self)
@@ -41,39 +46,47 @@ methods %% ---- Member functions -----------------------------------------------
             [x, y] = uncertainty_ellipsoid(mu, sigma);
             plot(x, y, "b");
         end
-        x = self.z(1:2:end);
-        y = self.z(2:2:end);
-        plot(x, y, "*r");
-    end % plot function 
 
-    function xi = get_state_i(self, idx) 
+        for i = 1:(size(self.z)/2)
+            z = self.z(2*i-1:2*i);
+            if all(z == [0; 0])
+                continue;
+            end
+            P = self.R(2*i-1:2*i, 2*i-1:2*i);
+            [x, y] = uncertainty_ellipsoid(z, P);
+            plot(x, y, "--r");
+            plot(z(1), z(2), "*r");
+        end
+    end % plot function
+
+    function xi = get_state_i(self, idx)
         xi = self.x(2*idx-1:2*idx);
-    end % get_state_i function 
+    end % get_state_i function
 
     function Pi = get_covariance_i(self, idx)
         Pi = self.P(2*idx-1:2*idx, 2*idx-1:2*idx);
     end % get_covariance_i function
 
 
-    function n = get_size(self) 
+    function n = get_size(self)
         n = length(self.x) / 2;
     end % get_map_size function
 
-    
+
     function eps = get_max_uncertainty(self, idx)
         % Returns the maximum eigenvalue of the covariance matrix for the i-th
         % state
         eps = max(abs(eig(self.get_covariance_i(idx))));
     end
-    
+
     function join(self, arg1, arg2)
         % Joins either 2 maps or a new state+covariance to the current map
-        
-        if nargin == 2 % We want to join 2 maps 
-            other = arg1; 
+
+        if nargin == 2 % We want to join 2 maps
+            other = arg1;
             self.x = [self.x; other.x];
             self.P = blkdiag(self.P, other.P);
-        end 
+        end
         if nargin == 3 % we want to join a state (with it's covariance)
             x = arg1;
             P = arg2;
@@ -84,20 +97,20 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function conditional_join(self, other)
-        %% Join two maps checking for overalapping landmarks 
+        %% Join two maps checking for overalapping landmarks
         config = get_current_configuration();
-        
-        for i = 1:other.get_size() 
+
+        for i = 1:other.get_size()
             x_other = other.get_state_i(i);
             P_other = other.get_covariance_i(i);
             can_join = true;
 
-            for j = 1:self.get_size() 
+            for j = 1:self.get_size()
                 x_self = self.get_state_i(j);
                 P_self = self.get_covariance_i(j);
-                
+
                 mh_dist = mahalanobis_distance(x_self, x_other, P_self);
-                if mh_dist < config.estimator.mahalanobis_th 
+                if mh_dist < config.estimator.mahalanobis_th
                     %% Here perform the WLS
                     H = [eye(2); eye(2)];
                     z = [x_self; x_other];
@@ -120,7 +133,7 @@ methods %% ---- Member functions -----------------------------------------------
         end
     end
 
-    function process_scan(self, manipulator, scan, camera) 
+    function process_scan(self, manipulator, scan, camera)
 
         %% Process laserscan and generate correspondences
         config = get_current_configuration();
@@ -131,7 +144,7 @@ methods %% ---- Member functions -----------------------------------------------
             n_correspondences           = size(correspondences, 2);
         end
 
-        dim_z = length(self.x); 
+        dim_z = length(self.x);
         dim_x = length(self.x);
         H = eye(dim_z);
         h = self.x;
@@ -145,26 +158,28 @@ methods %% ---- Member functions -----------------------------------------------
                             camera, ...
                             features(:, correspondences(1, :)) ...
                             );
+            self.z_tmp = z;
+            self.R_tmp = R;
             z_old = z;
             R_old = R;
 
             z = zeros(dim_z, 1);
             R = 10e6 * eye(dim_z);
-            
+
             for i = 1:size(correspondences, 2)
                 x_corr = correspondences(2:3, i);
                 z(x_corr) = z_old(2*i-1:2*i);
                 R(x_corr, x_corr) = R_old(2*i-1:2*i, 2*i-1:2*i);
             end
 
-        end % update step 
-        self.z = z; 
+        end % update step
+        self.z = z;
         self.H = H;
         self.R = R;
         self.build_composite_informations();
 
         %% Add unused information to buffer
-        new_obs = ones(1, size(features, 2)); 
+        new_obs = ones(1, size(features, 2));
         if ~isempty(correspondences)
             new_obs(correspondences(1, :)) = 0;
         end
@@ -190,8 +205,8 @@ methods %% ---- Member functions -----------------------------------------------
         end
     end
 
-    
-    function build_composite_informations(self) 
+
+    function build_composite_informations(self)
         H      = self.H;
         R      = self.R;
         z      = self.z;
@@ -200,7 +215,7 @@ methods %% ---- Member functions -----------------------------------------------
         a      = H' * Rinv * z;
         self.F = F;
         self.a = a;
-        if size(a, 2) > 1 
+        if size(a, 2) > 1
             warning("SIZE ERROR")
         end
     end
@@ -212,22 +227,22 @@ methods %% ---- Member functions -----------------------------------------------
     end
 
 
-    function linear_consensus(self, F_other, a_other, q_self, q_other)
-        self.F = self.F*q_self + F_other*q_other;
-        self.a = self.a*q_self + a_other*q_other;
-    end
+    % function linear_consensus(self, F_other, a_other, q_self, q_other)
+    %     self.F = self.F*q_self + F_other*q_other;
+    %     self.a = self.a*q_self + a_other*q_other;
+    % end
 
     function KF_update_step(self, N)
-        % N = Number of robots 
-        if size(self.a, 2) > 1 
+        % N = Number of robots
+        if size(self.a, 2) > 1
             warning("Invalid size");
         end
-        P = inv(self.P + N*self.F);     
-        self.x = P * (self.P*self.x + N*self.a); 
+        P = inv(inv(self.P) + N*self.F);
+        self.x = P * (inv(self.P)*self.x + N*self.a);
         self.P = P;
     end % KF_update_step function
 
-    
+
     function correspondences = find_correspondences(self, manipulator, camera, features)
         % This function aims at recognizing if the extracted features have already been seen in the
         % the current map.
@@ -236,15 +251,15 @@ methods %% ---- Member functions -----------------------------------------------
         % correspondences.
         % The output matrix is a 3xN matrix for which:
         %  - the first row contains the index of the feature;
-        %  - the second and third rows contain the indices of the corresponding landmark in the 
+        %  - the second and third rows contain the indices of the corresponding landmark in the
         %    state vector.
         config = get_current_configuration();
         correspondences = [];
-        
+
         for i = 1:size(features, 2)
             [h, S] = project_features(manipulator, camera, features(:, i));
             for j = 1:length(self.x)/2
-                if mahalanobis_distance(self.x(2*j-1:2*j), h, S) < config.estimator.mahalanobis_th 
+                if mahalanobis_distance(self.x(2*j-1:2*j), h, S) < config.estimator.mahalanobis_th
                     correspondences(:, end+1) = [i; 2*j-1; 2*j];
                 end
             end
@@ -262,7 +277,7 @@ methods %% ---- Member functions -----------------------------------------------
         self.P = blkdiag(self.P, S);
     end
 
-    
+
     function process_buffer(self)
         self.new_observations = MapEstimator();
         self.x_new = [];

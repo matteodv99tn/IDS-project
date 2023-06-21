@@ -141,6 +141,8 @@ methods %% ---- Member functions -----------------------------------------------
         self.q_est(1:3, 1) = x(1:3);
         self.dq_est(1:3, 1) = x(4:6);
 
+        v_EE = self.EE_jacobian(false)*self.dq_true;
+        % fprintf("%f\n", norm(v_EE(1:2)));
         self.error = [self.error, self.q_est - self.q_true];
         self.d_error = [self.d_error, self.dq_est - self.dq_true];
         self.sigma = [self.sigma, real(sqrt(diag(self.P(1:3, 1:3))))];

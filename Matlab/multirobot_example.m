@@ -3,7 +3,7 @@ clc;
 setup;
 
 
-%% --- Setup 
+%% --- Setup
 t = 0:dt:10;
 
 origin1 = [-3; 0];
@@ -45,8 +45,8 @@ k_sens = 0;
 for k = 1:length(t)
     man1.update_kinematic_dynamics();
     man2.update_kinematic_dynamics();
-    
-    if mod(k, 300) == 0 % Perform  a scan 
+
+    if mod(k, 300) == 0 % Perform  a scan
         k_sens = k_sens + 1
         scan1 = Scan(man1, cam1, obj);
         scan2 = Scan(man2, cam2, obj);
@@ -54,16 +54,16 @@ for k = 1:length(t)
         plot(scan1);
         figure(3), clf;
         plot(scan2);
-        
+
         map1.process_scan(man1, scan1, cam1);
         map2.process_scan(man2, scan2, cam2);
 
-        [F1, a1] = map1.get_composite_informations();
-        [F2, a2] = map2.get_composite_informations();
 
         for i_cons = 1:2
+            [F1, a1] = map1.get_composite_informations();
+            [F2, a2] = map2.get_composite_informations();
             % First linear consensus step
-            map2.linear_consensus(F1, a1, 1/2, 1/2);
+            map2.linear_consensus(F1, a1, 1/2, 1/2);4
             % Second linear consensus step
             map1.linear_consensus(F2, a2, 2/3, 1/3);
         end
@@ -96,7 +96,7 @@ for k = 1:length(t)
         xlim([-4, 4]);
         ylim([-4, 4]);
         plot(map2);
- 
+
    end
 
     if mod(k, 150) == 0
@@ -116,17 +116,17 @@ end
 % plot(man2.error(1,:));
 % plot(3*man2.sigma(1,:));
 % plot(-3*man2.sigma(1,:));
-% 
+%
 % figure(3), clf, hold on;
 % plot(man2.error(3,:));
 % plot(3*man2.sigma(3,:));
 % plot(-3*man2.sigma(3,:));
-% 
+%
 % figure(4), clf, hold on;
 % plot(man2.d_error(3,:));
 % plot(3*man2.d_sigma(3,:));
 % plot(-3*man2.d_sigma(3,:));
-% 
+%
 % figure(5), clf, hold on;
 % plot(man2.d_error(1,:));
 % plot(3*man2.d_sigma(1,:));
