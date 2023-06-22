@@ -49,7 +49,7 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function update(self)
-        self.planner.update_target(self.manipulator);
+        self.planner.update_target(self.manipulator, self.map);
         self.manipulator.update_kinematic_dynamics();
     end
 

@@ -37,7 +37,7 @@ for k = 1:length(t)
             p3 = polyshape(V(R{3*i},:));
             ptmp = union(p1, p2);
             poly = union(ptmp, p3);
-            systems{i}.planner.allowed_region = poly.Vertices;
+            systems{i}.planner.allowed_region = poly;
         end
 
 
@@ -62,6 +62,13 @@ for k = 1:length(t)
         cellfun(@(sys) plot(sys.manipulator), systems);
         plot(obj);
         plot(systems{1}.map);
+        axis equal;
+        xlim([-10, 10]);
+        ylim([-10, 10]);
+        plot(systems{1}.planner.allowed_region);
+        plot(systems{2}.planner.allowed_region);
+        plot(systems{3}.planner.allowed_region);
+        grid on;
     end
 
 end

@@ -29,7 +29,7 @@
     "mahalanobis_th": 3
   },
   "planner": {
-    "search_th": 1E-5,
+    "search_th": 0.1,
     "r_target": 1,
     "v_des": 0.4,
     "kp_radial": 0.5
