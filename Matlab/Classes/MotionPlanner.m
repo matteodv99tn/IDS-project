@@ -15,6 +15,7 @@ properties %% ---- Attributes of the class -------------------------------------
     target_count = 0;
 
     wrong_state_pos = [];
+    k = 0
 
 end % properties
 
@@ -43,23 +44,33 @@ methods %% ---- Member functions -----------------------------------------------
         else
             xEE = manipulator.get_EE_state(true);
             dir_target = self.target - xEE(1:2);
-            dir_target = dir_target / norm(dir_target);
-            [dir_repulsive, d_min] = self.build_repulsive_direction(manipulator);
-            if norm(dir_repulsive) > 0.001
-                dir_repulsive = dir_repulsive/norm(dir_repulsive) * 0.1;
-                dir_target = dir_target + self.weight(d_min)*dir_repulsive;
+            rad = norm(dir_target);
+            dir_target = dir_target / rad;
+
+            vel_ref = 0.5;
+
+            v_rad = dir_target * (rad - 0.1);
+            if norm(v_rad) > vel_ref
+                v_rad = v_rad/norm(v_rad) * vel_ref;
             end
+
+            tan_vel = sqrt(vel_ref^2 - norm(v_rad)^2);
+            v_tan = [-dir_target(2); dir_target(1)] * tan_vel * cos(self.k/1000);
+            self.k = self.k + 1;
+            dir = v_rad + v_tan;
 
             incell = false;
             i = 0;
-            [d, xr, yr] = p_poly_dist(xEE(1), xEE(2), self.allowed_region.Vertices(:,1), self.allowed_region.Vertices(:,2));
-            dir_repulsive = [xr; yr];
-            dir_repulsive = dir_repulsive/norm(dir_repulsive) * 0.1;
             while ~incell
-                dir = dir_target + i*dir_repulsive;
-                dir = dir/norm(dir) * 0.5;
-                x_EE_next = xEE(1:2) + 20*dir*manipulator.dt;
-                incell = isinterior(self.allowed_region, x_EE_next(1), x_EE_next(2));
+
+                dir = dir/norm(dir) * vel_ref;
+                xEE_next = xEE(1:2) + 10*dir*manipulator.dt;
+                incell = isinterior(self.allowed_region, xEE_next(1), xEE_next(2));
+
+                [dist, px, py] = p_poly_dist(xEE_next(1), xEE_next(2), self.allowed_region.Vertices(:,1), self.allowed_region.Vertices(:,2));
+                delta = [px; py] - xEE_next;
+                dir = dir + delta/norm(delta) * 1.1;
+
                 i = i + 1;
                 if i > 100
                     fprintf("STUCK!\n");
@@ -67,11 +78,12 @@ methods %% ---- Member functions -----------------------------------------------
                     incell = true;
                 end
             end
+
             alpha = atan2(dir_target(2), dir_target(1));
             gamma = mod(xEE(3) - alpha + pi, 2*pi) - pi;
             omega = -gamma*2;
         end
-        manipulator.controller.set_target([dir; omega]);
+       manipulator.controller.set_target([dir; omega]);
     end
 
 
