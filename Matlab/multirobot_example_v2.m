@@ -8,20 +8,37 @@ t = 0:dt:100;
 
 
 systems  = {
-    System([3; 0]); ...
-    System([-3; 0]); ...
-    System([0; -5]); ...
+    System([3; 3]); ...
+    System([2; -4]); ...
+    System([-3; 3]); ...
     };
+
+systems{1}.manipulator.set_initial_joint_config([pi/6; -4/6*pi + randn()*0.2; 2*pi*rand()]);
+systems{2}.manipulator.set_initial_joint_config([-5*pi/6; -5/6*pi + randn()*0.2; 2*pi*rand()]);
+systems{3}.manipulator.set_initial_joint_config([5*pi/6; 4/6*pi + randn()*0.2; 2*pi*rand()]);
 N_robots = length(systems);
 Q = ones(N_robots) / N_robots;
 
 obj = dataset{randi(numel(dataset))};
+
+obj.RF = rototranslation_matrix(-2+4*rand(), -2+4*rand(), 2*pi*rand())
+
 k_sens = 0;
 
 for k = 1:length(t)
+
+    for i = 1:N_robots
+        systems{i}.manipulator.other_points_pos = {};
+        for j = 1:N_robots
+            if i ~= j
+                systems{i}.manipulator.other_points_pos{end+1} = systems{j}.manipulator.get_voronoi_points();
+            end
+        end
+    end
     cellfun(@update, systems);
 
     if mod(k, 300) == 0 % Perform  a scan
+        fprintf("----------------------------------\n");
 
 
         % --- Voronoi map update
@@ -56,6 +73,16 @@ for k = 1:length(t)
             end
         end
 
+        for i = 1:N_robots
+            for j = 1:N_robots
+                if i ~= j
+                    rob_points = systems{j}.manipulator.get_voronoi_points();
+                    rob_envelope = polybuffer(rob_points, 'line', 0.25);
+                    systems{i}.planner.allowed_region = subtract(systems{i}.planner.allowed_region, rob_envelope);
+                end
+            end
+        end
+
         cellfun(@(sys, F, a) sys.merge_data(map_to_add, F, a, 1), systems, F, a);
 
         figure(1), clf, hold on;
@@ -63,12 +90,33 @@ for k = 1:length(t)
         plot(obj);
         plot(systems{1}.map);
         axis equal;
-        xlim([-10, 10]);
-        ylim([-10, 10]);
+        XX = 5;
+        xlim([-XX, XX]);
+        ylim([-XX, XX]);
         plot(systems{1}.planner.allowed_region);
         plot(systems{2}.planner.allowed_region);
         plot(systems{3}.planner.allowed_region);
         grid on;
+
+
+        map = systems{1}.map;
+        disc = 0;
+        for i = 1:map.get_size()
+            if map.get_max_uncertainty(i) < config.planner.search_th
+                disc = disc + 1;
+            end
+        end
+        fprintf(" > Discovered %d/%d points\n", disc, map.get_size());
+
+        rm_idxs = cellfun(@undesired_states, systems, "UniformOutput", false);
+        rm_idxss = [];
+        for i = 1:N_robots
+            rm_idxss = [rm_idxss; rm_idxs{i}];
+        end
+
+        if ~isempty(rm_idxss)
+            fprintf("WATH OUT\n");
+        end
     end
 
 end

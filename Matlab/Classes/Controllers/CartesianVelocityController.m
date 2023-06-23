@@ -18,7 +18,7 @@ methods %% ---- Member functions -----------------------------------------------
 
 
     function tau = compute_tau(self, manipulator)
-        
+
         compute_tau@BaseController(self);
 
         vel_meas        = manipulator.get_EE_velocity(true);
@@ -35,6 +35,7 @@ methods %% ---- Member functions -----------------------------------------------
         Lambda  = (J * M^(-1) * transpose(J))^(-1);
         mu      = Lambda * J * M^(-1) * h;
         tau     = transpose(J) * (Lambda*ddx + mu);
+        tau     = tau + self.collision_avoider(manipulator);
         % tau = M * inv(J) * ddx + h;
     end
 
@@ -44,6 +45,31 @@ methods %% ---- Member functions -----------------------------------------------
             if abs(self.acc_err(i)) > self.clip_th(i)
                 self.acc_err(i) = sign(self.acc_err(i))*self.clip_th(i);
             end
+        end
+    end
+
+
+    function tau = collision_avoider(self, manipulator);
+        tau = zeros(3, 1);
+        for i = 1:length(manipulator.other_points_pos)
+            pts = manipulator.other_points_pos{i};
+            L1  = manipulator.L1;
+            L2  = manipulator.L2;
+            q1 = manipulator.q_est(1);
+            q2 = manipulator.q_est(2);
+            OO = manipulator.origin;
+            A = OO + L1 * [cos(q1); sin(q1)];
+            B = A + L2 * [cos(q1+q2); sin(q1+q2)];
+
+            [d, px, py] = p_poly_dist(A(1), A(2), pts(:,1), pts(:,2));
+            v1 = A - [px; py];
+            v2 = [-sin(q1), cos(q1)];
+            tau(1) = tau(1) + 100 * dot(v1, v2) / (d^2);
+
+            [d, px, py] = p_poly_dist(B(1), B(2), pts(:,1), pts(:,2));
+            v1 = B - [px; py];
+            v2 = [-sin(q1+q2), cos(q1+q2)];
+            tau(2) = tau(2) + 100 * dot(v1, v2) / (d^2);
         end
     end
 

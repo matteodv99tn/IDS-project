@@ -106,6 +106,13 @@ methods %% ---- Member functions -----------------------------------------------
     end
 
 
+    function remove_state_i(self, idx)
+        self.x(2*idx-1:2*idx) = [];
+        self.P(2*idx-1:2*idx, :) = [];
+        self.P(:, 2*idx-1:2*idx) = [];
+    end
+
+
     function conditional_join(self, other)
         %% Join two maps checking for overalapping landmarks
         config = get_current_configuration();
@@ -192,6 +199,7 @@ methods %% ---- Member functions -----------------------------------------------
         new_obs = ones(1, size(features, 2));
         if ~isempty(correspondences)
             new_obs(correspondences(1, :)) = 0;
+            new_obs(features(1, :) > 8) = 0;
         end
         new_feat  = features(:, new_obs == 1);
         n_new_obs = sum(new_obs);

@@ -1,10 +1,10 @@
 classdef BaseObject < handle
 
 properties %% ---- Attributes of the class --------------------------------------------------------
-    
+
     RF;                         % reference frame of the object
     point_matrix;               % 3xN matrix storing the vertices of the closed polygon (first and
-                                % last point should be the same). Row 1 -> x coords, row 2 -> y 
+                                % last point should be the same). Row 1 -> x coords, row 2 -> y
                                 % coords, row 3 -> ones.
 
 end % properties
@@ -12,7 +12,7 @@ end % properties
 
 methods %% ---- Member functions ------------------------------------------------------------------
 
-    function self = Object(RF) 
+    function self = BaseObject(RF)
         % set RF optional
     end % Object constructor
 
@@ -20,7 +20,7 @@ methods %% ---- Member functions -----------------------------------------------
     function plot(self)
         data = self.RF * self.point_matrix;
         plot(data(1,:), data(2,:), "k");
-    end % plot function 
+    end % plot function
 
 
     function poly = get_projected_polygon(self)

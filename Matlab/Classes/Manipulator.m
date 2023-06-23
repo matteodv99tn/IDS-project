@@ -30,6 +30,8 @@ properties %% ---- Attributes of the class -------------------------------------
     % --- Other parameters
     dt;
 
+    other_points_pos = {};
+
 
 end % properties
 

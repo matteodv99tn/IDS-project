@@ -19,7 +19,8 @@ methods %% ---- Member functions -----------------------------------------------
         self.map = MapEstimator();
         self.planner = MotionPlanner();
 
-        self.manipulator.set_initial_joint_config([0; 1; -1]);
+        q0 = 2*pi*rand(3, 1) - pi;
+        self.manipulator.set_initial_joint_config(q0);
         self.manipulator.set_controller(CartesianVelocityController());
     end % System constructor
 
@@ -67,6 +68,19 @@ methods %% ---- Member functions -----------------------------------------------
         self.map.KF_update_step(N_robots);
         self.map.join(newmap);,
         self.planner.plan_motion(self.manipulator, self.map);
+    end
+
+    function state_idx = undesired_states(self)
+        if ~isempty(self.planner.wrong_state_pos)
+            for i = 1:self.map.get_size()
+                if self.map.get_state_idx(i) == self.planner.wrong_state_pos
+                    state_idx = i;
+                    return;
+                end
+            end
+        else
+            state_idx = [];
+        end
     end
 
 
