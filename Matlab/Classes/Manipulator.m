@@ -89,6 +89,7 @@ methods %% ---- Member functions -----------------------------------------------
         plot(points(1,:), points(2,:), "-o");
         hold on;
         quiver(P3(1), P3(2), darrow(1), darrow(2), "g");
+        quiver(P3(1), P3(2), self.controller.target(1), self.controller.target(2), "r");
     end % plot function overload
 
 

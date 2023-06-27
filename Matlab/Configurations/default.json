@@ -3,8 +3,8 @@
     "dt": 0.001
   },
   "feature_extraction": {
-    "delta": 0.03,
-    "epsilon": 0.02,
+    "delta": 0.02,
+    "epsilon": 0.015,
     "max_alpha": 0.17453292519943295,
     "n_point_generation": 6,
     "n_point_back_on_success": 2,
@@ -13,8 +13,8 @@
   },
   "camera": {
     "d_max": 30,
-    "d_std": 0.005,
-    "theta_std": 0.0008726646259971648,
+    "d_std": 0.001,
+    "theta_std": 0.00052359877559829881,
     "defaults": {
       "fov": 1.0471975511965976,
       "n_points": 151

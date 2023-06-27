@@ -90,7 +90,7 @@ for k = 1:length(t)
         plot(obj);
         plot(systems{1}.map);
         axis equal;
-        XX = 5;
+        XX = 4;
         xlim([-XX, XX]);
         ylim([-XX, XX]);
         plot(systems{1}.planner.allowed_region);
