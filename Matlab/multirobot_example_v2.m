@@ -117,6 +117,15 @@ for k = 1:length(t)
         if ~isempty(rm_idxss)
             fprintf("WATH OUT\n");
         end
+
+        redundant_states = cellfun(@(sys) sys.map.redundant_states(), systems, "UniformOutput", false);
+        for i = 1:N_robots
+            fprintf("%d ", systems{i}.planner.target_count);
+            if ~isempty(redundant_states{i})
+                fprintf("Robot has redundant states\n");
+            end
+        end
+        fprintf("\n");
     end
 
 end

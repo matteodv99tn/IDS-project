@@ -334,6 +334,53 @@ methods %% ---- Member functions -----------------------------------------------
         end
     end % process_buffer function
 
+
+    function out = redundant_states(self)
+        out = [];
+
+        for i = 1:self.get_size()
+            xi = self.get_state_i(i);
+            Pi = self.get_covariance_i(i);
+
+            if norm(Pi) > 0.1
+                continue;
+            end
+
+            for j = i+1:self.get_size()
+                xj = self.get_state_i(j);
+
+                if mahalanobis_distance(xj, xi, Pi) < 3
+                    out = [i, j];
+                    return;
+                end
+            end
+        end
+    end
+
+
+    function process_overlapping_states(self, indexes)
+        i = indexes(1);
+        j = indexes(2);
+
+        x1 = self.get_state_i(i);
+        x2 = self.get_state_i(j);
+        P1 = self.get_covariance_i(i);
+        P2 = self.get_covariance_i(j);
+
+        z = [x1; x2];
+        C = blkdiag(P1, P2);
+        H = [eye(2), eye(2)];
+
+        Cinv = inv(C);
+        P = inv(H' * Cinv * H);
+        x = P * H' * Cinv * z;
+
+        self.x(2*i-1:2*i) = x(1:2);
+        self.P(2*i-1:2*i, 2*i-1:2*i) = P(1:2, 1:2);
+
+        self.remove_state_i(j);
+    end
+
 end % methods
 
 end % MapEstimator class

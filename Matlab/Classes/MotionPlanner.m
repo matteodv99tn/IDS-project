@@ -154,7 +154,12 @@ methods %% ---- Member functions -----------------------------------------------
             end
         end
 
+        if all(size(self.prev_target) == size(self.target)) && ~isempty(self.target)
+            tmp = self.prev_target == self.target;
+            fprintf("%d %d << \n", tmp(1), tmp(2));
+        end
         if all(size(self.prev_target) == size(self.target)) && ~isempty(self.target) && all(self.prev_target == self.target)
+            fprintf("STEPPING\n");
             self.target_count = self.target_count + 1;
             if self.target_count > 10
                 self.wrong_state_pos = self.target;
