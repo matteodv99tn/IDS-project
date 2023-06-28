@@ -84,6 +84,22 @@ methods %% ---- Member functions -----------------------------------------------
     end
 
 
+    function constraint_voronoi_cell(self)
+
+        function ps = circle(origin, r)
+            theta = (0:19)*(2*pi/20);
+            x = origin(1) + r*cos(theta);
+            y = origin(2) + r*sin(theta);
+            ps = polyshape(x, y);
+        end
+
+        max_bound = circle(self.manipulator.origin, ...
+            (self.manipulator.L1 + self.manipulator.L2)*0.9);
+        self.planner.allowed_region = intersect(self.planner.allowed_region, max_bound);
+
+    end % constraint_voronoi_cell function
+
+
 
 end % methods
 

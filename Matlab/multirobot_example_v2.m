@@ -2,7 +2,6 @@ clear;
 clc;
 setup;
 
-
 %% --- Setup
 t = 0:dt:100;
 
@@ -74,6 +73,7 @@ for k = 1:length(t)
         end
 
         for i = 1:N_robots
+            systems{i}.constraint_voronoi_cell();
             for j = 1:N_robots
                 if i ~= j
                     rob_points = systems{j}.manipulator.get_voronoi_points();
@@ -90,7 +90,7 @@ for k = 1:length(t)
         plot(obj);
         plot(systems{1}.map);
         axis equal;
-        XX = 4;
+        XX = 7;
         xlim([-XX, XX]);
         ylim([-XX, XX]);
         plot(systems{1}.planner.allowed_region);
@@ -119,13 +119,18 @@ for k = 1:length(t)
         end
 
         redundant_states = cellfun(@(sys) sys.map.redundant_states(), systems, "UniformOutput", false);
+        states_to_remove = [];
         for i = 1:N_robots
-            fprintf("%d ", systems{i}.planner.target_count);
             if ~isempty(redundant_states{i})
-                fprintf("Robot has redundant states\n");
+                states_to_remove = redundant_states{i};
+                break;
             end
         end
-        fprintf("\n");
+        if ~isempty(states_to_remove)
+            fprintf(" === REMOVING A STATE === \n");
+            cellfun(@(sys) sys.map.process_overlapping_states(states_to_remove), ...
+                systems);
+        end
     end
 
 end

@@ -147,7 +147,7 @@ methods %% ---- Member functions -----------------------------------------------
             DT = delaunayTriangulation(map_points');
             F = freeBoundary(DT);
             hole = polyshape(pts_x(F(:,1)), pts_y(F(:,1)));
-            hole = polybuffer(hole, 0.1);
+            hole = polybuffer(hole, 0.2);
             if ~isempty(self.allowed_region)
                 region = self.allowed_region; % polyshape(self.allowed_region(:,1), self.allowed_region(:,2));
                 self.allowed_region = subtract(region, hole);
@@ -156,7 +156,8 @@ methods %% ---- Member functions -----------------------------------------------
 
         if all(size(self.prev_target) == size(self.target)) && ~isempty(self.target)
             tmp = self.prev_target == self.target;
-            fprintf("%d %d << \n", tmp(1), tmp(2));
+            fprintf("%f = %f AND %f = %f \n", ...
+                self.prev_target(1), self.target(1), self.prev_target(2), self.target(2));
         end
         if all(size(self.prev_target) == size(self.target)) && ~isempty(self.target) && all(self.prev_target == self.target)
             fprintf("STEPPING\n");

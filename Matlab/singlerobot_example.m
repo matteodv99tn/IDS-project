@@ -6,7 +6,7 @@ setup;
 %% --- Setup
 t = 0:dt:100;
 
-sys = System();
+sys = System(translation_matrix(-2, -2));
 obj = dataset{randi(numel(dataset))};
 k_sens = 0;
 
