@@ -20,6 +20,9 @@ properties %% ---- Attributes of the class -------------------------------------
 
     buffer;
 
+
+    seeds;
+    features;
 end % properties
 
 methods %% ---- Member functions ------------------------------------------------------------------
@@ -155,6 +158,8 @@ methods %% ---- Member functions -----------------------------------------------
         %% Process laserscan and generate correspondences
         config = get_current_configuration();
         [seeds, features, n_removed]    = extract_features(scan);
+        self.seeds = seeds;
+        self.features = features;
         correspondences                 = self.find_correspondences(manipulator, camera, features);
         n_correspondences               = 0;
         if ~isempty(correspondences)
@@ -200,6 +205,7 @@ methods %% ---- Member functions -----------------------------------------------
         if ~isempty(correspondences)
             new_obs(correspondences(1, :)) = 0;
             new_obs(features(1, :) > 8) = 0;
+            % new_obs(self.find_feasile_states(features)) = 0;
         end
         new_feat  = features(:, new_obs == 1);
         n_new_obs = sum(new_obs);
@@ -369,7 +375,7 @@ methods %% ---- Member functions -----------------------------------------------
 
         z = [x1; x2];
         C = blkdiag(P1, P2);
-        H = [eye(2), eye(2)];
+        H = [eye(2); eye(2)];
 
         Cinv = inv(C);
         P = inv(H' * Cinv * H);
@@ -381,6 +387,109 @@ methods %% ---- Member functions -----------------------------------------------
         self.remove_state_i(j);
     end
 
+
+    function feas = find_feasile_states(self, observations)
+        X = [self.x(1:2:end)'; self.x(2:2:end)'];
+        feas = zeros(1, size(observations, 2));
+        for j = 1:size(observations, 2)
+            delta = X - observations(:, j);
+            dist = vecnorm(delta);
+            if any(dist < 0.2)
+                feas(j) = 1;
+            end
+        end
+        feas = logical(feas);
+    end % find_feasile_states function
+
+
+    function [best_idx, best_params] = find_best_fit(self, dataset)
+        opts = optimset( ...
+            "Display", "off", ...
+            "MaxIter", 1e4, ...
+            "MaxFunEvals", 1e5, ...
+            "TolFun", 1e-12, ...
+            "TolX", 1e-12 ...
+            );
+        X = [self.x(1:2:end)'; self.x(2:2:end)'];
+        x0 = [mean(X(1,:)); mean(X(2,:)); 0];
+
+        X1 = X - x0(1:2);
+        [U1, S1, V1] = svd(X1');
+        best_idx = 0;
+        best_cost = inf;
+        best_params = x0;
+
+
+        allcosts = zeros(1, length(dataset));
+        for i = 1:length(dataset)
+            obj = dataset{i};
+            poly = obj.get_projected_polygon();
+            poly = poly(1:2, 1:end-1);
+            poly_mean = mean(poly, 2);
+            poly = poly - poly_mean;
+            [U2, S2, V2] = svd(poly');
+            R = V1 * V2';
+            x0(3) = atan2(R(2,1), R(1,1));
+
+            [x, feval] = fminsearch(@(x) self.cost_function(x, obj), x0, opts);
+            allcosts(i) = feval;
+            fprintf("%s -> %f\n", obj.name, feval);
+            if feval < best_cost
+                best_cost = feval;
+                best_idx = i;
+                best_params = x;
+            end
+        end
+        allcosts = sort(allcosts);
+        for i = 1:length(allcosts)
+            % fprintf("%3f | ", i, allcosts(i));
+        end
+        % fprintf("\n");
+    end
+
+
+    function cost = cost_function(self, x, obj)
+        cost_vect = self.cost_function_vector(x, obj);
+        cost = mean(cost_vect) / (1+length(find(cost_vect < 9)));
+    end
+
+
+    function cost = cost_function_vector(self, x, obj)
+        test_obj = obj;
+        test_obj.RF = rototranslation_matrix(x(1), x(2), x(3));
+        points = test_obj.get_projected_polygon();
+        points = points(1:2, 1:end-1);
+        cost = zeros(1, self.get_size());
+
+        for j = 1:self.get_size()
+            delta = points - self.get_state_i(j);
+            dist = vecnorm(delta);
+            [~, min_idx] = min(dist);
+            pt = points(:, min_idx);
+            cost(j) = mahalanobis_distance(self.get_state_i(j), pt, self.get_covariance_i(j));
+        end
+        cost = cost .^ 2;
+    end
+
+
+    function state_to_remove = find_removable_state(self, x, obj)
+        costs = self.cost_function_vector(x, obj);
+        state_to_remove = [];
+
+        n_vertices = size(obj.point_matrix, 2) - 1;
+
+        [costs, idx] = sort(costs);
+        std1 = std(costs);
+        std2 = std(costs(1:end-1));
+
+        if self.get_size() > ceil(n_vertices*0.6)
+            fprintf("Std ratio: %f\n", std1/std2);
+            if std1/std2 > 5
+                fprintf("I should remove something\n");
+                state_to_remove = idx(end);
+            end
+        end
+    end
 end % methods
 
 end % MapEstimator class

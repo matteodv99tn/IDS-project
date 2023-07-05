@@ -121,16 +121,13 @@ methods %% ---- Member functions -----------------------------------------------
                 dist = vecnorm(feas_points - centr);
                 [~, idx] = min(dist);
                 self.target = feas_points(:,idx);
-                fprintf("Setting feasible point\n");
             else
                 xEE = x_EE(1:2);
                 dist = vecnorm(self.attraction_points - xEE);
                 [~, idx] = min(dist);
                 self.target = self.attraction_points(:,idx);
-                fprintf("Closes attraction point\n");
             end
         else
-            fprintf("No target\n");
             self.target = [];
         end
 
@@ -156,11 +153,8 @@ methods %% ---- Member functions -----------------------------------------------
 
         if all(size(self.prev_target) == size(self.target)) && ~isempty(self.target)
             tmp = self.prev_target == self.target;
-            fprintf("%f = %f AND %f = %f \n", ...
-                self.prev_target(1), self.target(1), self.prev_target(2), self.target(2));
         end
         if all(size(self.prev_target) == size(self.target)) && ~isempty(self.target) && all(self.prev_target == self.target)
-            fprintf("STEPPING\n");
             self.target_count = self.target_count + 1;
             if self.target_count > 10
                 self.wrong_state_pos = self.target;

@@ -19,6 +19,8 @@ methods %% ---- Member functions -----------------------------------------------
             -1, -1,  1,  1, -1; ...
              1,  1,  1,  1,  1  ...
              ];
+        self.point_matrix(1:2, :) = self.point_matrix(1:2, :) * 0.5;
+        self.name = "rectangle";
 
     end % Rectangle constructor
 

@@ -19,6 +19,7 @@ methods %% ---- Member functions -----------------------------------------------
             -1, -1,  1,  1, -1; ...
              1,  1,  1,  1,  1  ...
              ];
+        self.name = "square";
 
     end % Square constructor
 

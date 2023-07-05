@@ -18,9 +18,12 @@ systems{3}.manipulator.set_initial_joint_config([5*pi/6; 4/6*pi + randn()*0.2; 2
 N_robots = length(systems);
 Q = ones(N_robots) / N_robots;
 
-obj = dataset{randi(numel(dataset))};
+obj_i = randi(numel(dataset));
+obj = dataset{obj_i};
 
-obj.RF = rototranslation_matrix(-2+4*rand(), -2+4*rand(), 2*pi*rand())
+fprintf("Dataset index: %d ---> %s \n", obj_i, obj.name);
+
+obj.RF = rototranslation_matrix(-2+4*rand(), -2+4*rand(), 2*pi*rand());
 
 k_sens = 0;
 
@@ -90,13 +93,29 @@ for k = 1:length(t)
         plot(obj);
         plot(systems{1}.map);
         axis equal;
-        XX = 7;
+        XX = 4;
         xlim([-XX, XX]);
         ylim([-XX, XX]);
         plot(systems{1}.planner.allowed_region);
         plot(systems{2}.planner.allowed_region);
         plot(systems{3}.planner.allowed_region);
         grid on;
+
+        % figure(2), clf, hold on;
+        % for i = 1:N_robots
+        %     subplot(2, 2, i), hold on;
+        %     plot(systems{i}.scan);
+        %     for j = 1:length(systems{i}.map.seeds)
+        %         plot(systems{i}.map.seeds{j});
+        %     end
+        %     if ~isempty(systems{i}.map.features)
+        %         plot(systems{i}.map.features(1,:), systems{i}.map.features(2, :), "r*");
+        %     end
+        %     axis equal;
+        %     grid on;
+        %     xlim([0, 6]);
+        %     ylim([-4, 4]);
+        % end
 
 
         map = systems{1}.map;
@@ -130,6 +149,18 @@ for k = 1:length(t)
             fprintf(" === REMOVING A STATE === \n");
             cellfun(@(sys) sys.map.process_overlapping_states(states_to_remove), ...
                 systems);
+        end
+
+        if systems{1}.map.get_size() >= 3
+            [idx, params] = systems{1}.map.find_best_fit(dataset);
+            fprintf(" > Best fit: %s\n", dataset{idx}.name);
+            idx = systems{1}.map.find_removable_state(params, dataset{idx});
+            if ~isempty(idx)
+                fprintf(" > Removing state %d\n", idx);
+                systems{1}.map.remove_state_i(idx);
+                systems{2}.map.remove_state_i(idx);
+                systems{3}.map.remove_state_i(idx);
+            end
         end
     end
 

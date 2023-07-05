@@ -1,4 +1,4 @@
-classdef BaseObject < handle
+classdef BaseObject
 
 properties %% ---- Attributes of the class --------------------------------------------------------
 
@@ -6,6 +6,7 @@ properties %% ---- Attributes of the class -------------------------------------
     point_matrix;               % 3xN matrix storing the vertices of the closed polygon (first and
                                 % last point should be the same). Row 1 -> x coords, row 2 -> y
                                 % coords, row 3 -> ones.
+    name;
 
 end % properties
 
@@ -14,6 +15,7 @@ methods %% ---- Member functions -----------------------------------------------
 
     function self = BaseObject(RF)
         % set RF optional
+        self.name = "";
     end % Object constructor
 
 

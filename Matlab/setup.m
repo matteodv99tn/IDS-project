@@ -38,7 +38,7 @@ dataset = {
 config.simulation.dt    = 0.001;                        % sampling period for the simulation
 
 % --- Feature extraction algorithm
-config.feature_extraction.delta = 0.02; % 0.03
+config.feature_extraction.delta = 0.03; % 0.03
 config.feature_extraction.epsilon = 0.01; % 0.009
 config.feature_extraction.max_alpha = 10 * pi / 180;
 config.feature_extraction.n_point_generation = 6;
