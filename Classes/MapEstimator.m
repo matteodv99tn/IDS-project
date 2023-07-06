@@ -23,11 +23,20 @@ properties %% ---- Attributes of the class -------------------------------------
 
     seeds;
     features;
+
+    k;
+    x_hist;
+    P_hist;
+    feat_hist;
+    z_hist;
+    R_hist;
 end % properties
 
 methods %% ---- Member functions ------------------------------------------------------------------
 
     function self = MapEstimator(stop_exec)
+
+        config = get_current_configuration();
 
         self.x = [];
         self.P = [];
@@ -39,6 +48,14 @@ methods %% ---- Member functions -----------------------------------------------
 
         self.z_tmp = [];
         self.R_tmp = [];
+
+        N = config.simulation.N_meas;
+        self.k = 1;
+        self.x_hist = cell(1, N);
+        self.P_hist = cell(1, N);
+        self.feat_hist = cell(1, N);
+        self.z_hist = cell(1, N);
+        self.R_hist = cell(1, N);
 
     end % MapEstimator constructor
 
@@ -227,6 +244,15 @@ methods %% ---- Member functions -----------------------------------------------
             self.buffer(1) = [];
             self.process_buffer();
         end
+
+        self.feat_hist{self.k} = self.features;
+        [z, R] = project_features( ...
+                        manipulator, ...
+                        camera, ...
+                        features ...
+                        );
+        self.z_hist{self.k} = z;
+        self.R_hist{self.k} = R;
     end
 
 
@@ -264,6 +290,10 @@ methods %% ---- Member functions -----------------------------------------------
         P = inv(inv(self.P) + N*self.F);
         self.x = P * (inv(self.P)*self.x + N*self.a);
         self.P = P;
+
+        self.x_hist{self.k} = self.x;
+        self.P_hist{self.k} = self.P;
+        self.k = self.k + 1;
     end % KF_update_step function
 
 
@@ -338,6 +368,7 @@ methods %% ---- Member functions -----------------------------------------------
             end
             idx_obs = idx_obs + 1;
         end
+
     end % process_buffer function
 
 

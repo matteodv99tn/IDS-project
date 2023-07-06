@@ -8,12 +8,18 @@ properties %% ---- Attributes of the class -------------------------------------
     map;
     planner;
 
+
+    k;
+    scans;
+
 end % properties
 
 
 methods %% ---- Member functions ------------------------------------------------------------------
 
     function self = System(RF)
+        config = get_current_configuration();
+
         self.manipulator = Manipulator(3, 3, RF);
         self.camera = Camera();
         self.map = MapEstimator();
@@ -22,6 +28,10 @@ methods %% ---- Member functions -----------------------------------------------
         q0 = 2*pi*rand(3, 1) - pi;
         self.manipulator.set_initial_joint_config(q0);
         self.manipulator.set_controller(CartesianVelocityController());
+
+        N = config.simulation.N_meas;
+        self.k = 1;
+        self.scans = cell(1, N);
     end % System constructor
 
 
@@ -60,6 +70,9 @@ methods %% ---- Member functions -----------------------------------------------
         self.map.process_scan(self.manipulator, self.scan, self.camera);
         [F, a] = self.map.get_composite_informations();
         newmap = self.map.new_observations;
+
+        self.scans{self.k} = self.scan;
+        self.k = self.k + 1;
     end
 
     function merge_data(self, newmap, F, a, N_robots)

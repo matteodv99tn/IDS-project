@@ -32,6 +32,11 @@ properties %% ---- Attributes of the class -------------------------------------
 
     other_points_pos = {};
 
+    q_est_hist;
+    q_true_hist;
+    P_hist;
+    k;
+
 
 end % properties
 
@@ -70,6 +75,12 @@ methods %% ---- Member functions -----------------------------------------------
         self.R      = blkdiag(self.R_q, self.R_dq);
 
         self.controller = BaseController();
+
+        self.k = 1;
+        N = config.simulation.N_max;
+        self.q_est_hist = zeros(N, 3);
+        self.q_true_hist = zeros(N, 3);
+        self.P_hist = zeros(N, 3, 3);
     end % Manipulator constructor
 
 
@@ -86,7 +97,7 @@ methods %% ---- Member functions -----------------------------------------------
         darrow  = RF3 * delta;
         points  = [P1, P2, P3];
 
-        plot(points(1,:), points(2,:), "-o");
+        plot(points(1,:), points(2,:), "-ok", "LineWidth", 2, "MarkerSize", 10);
         hold on;
         quiver(P3(1), P3(2), darrow(1), darrow(2), "g");
         quiver(P3(1), P3(2), self.controller.target(1), self.controller.target(2), "r");
@@ -150,6 +161,11 @@ methods %% ---- Member functions -----------------------------------------------
         self.d_error = [self.d_error, self.dq_est - self.dq_true];
         self.sigma = [self.sigma, real(sqrt(diag(self.P(1:3, 1:3))))];
         self.d_sigma = [self.d_sigma, real(sqrt(diag(self.P(4:6, 4:6))))];
+
+        self.q_est_hist(self.k, :) = self.q_est';
+        self.q_true_hist(self.k, :) = self.q_true';
+        self.P_hist(self.k, :, :) = self.P(1:3, 1:3);
+        self.k = self.k + 1;
     end
 
 
