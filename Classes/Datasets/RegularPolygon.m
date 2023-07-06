@@ -21,7 +21,7 @@ methods %% ---- Member functions -----------------------------------------------
             sin(angles); ...
             ones(1, nvertices+1)  ...
             ];
-        self.name = sprintf('RegularPolygon with %d vertices', nvertices);
+        self.name = sprintf('regular polygon with %d vertices', nvertices);
 
     end % RegularPolygon constructor
 

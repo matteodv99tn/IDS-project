@@ -433,7 +433,7 @@ methods %% ---- Member functions -----------------------------------------------
     end % find_feasile_states function
 
 
-    function [best_idx, best_params] = find_best_fit(self, dataset)
+    function [best_idx, best_params, allcosts] = find_best_fit(self, dataset)
         opts = optimset( ...
             "Display", "off", ...
             "MaxIter", 1e4, ...
@@ -464,18 +464,12 @@ methods %% ---- Member functions -----------------------------------------------
 
             [x, feval] = fminsearch(@(x) self.cost_function(x, obj), x0, opts);
             allcosts(i) = feval;
-            fprintf("%s -> %f\n", obj.name, feval);
             if feval < best_cost
                 best_cost = feval;
                 best_idx = i;
                 best_params = x;
             end
         end
-        allcosts = sort(allcosts);
-        for i = 1:length(allcosts)
-            % fprintf("%3f | ", i, allcosts(i));
-        end
-        % fprintf("\n");
     end
 
 
@@ -514,9 +508,7 @@ methods %% ---- Member functions -----------------------------------------------
         std2 = std(costs(1:end-1));
 
         if self.get_size() > ceil(n_vertices*0.6)
-            fprintf("Std ratio: %f\n", std1/std2);
             if std1/std2 > 5
-                fprintf("I should remove something\n");
                 state_to_remove = idx(end);
             end
         end
