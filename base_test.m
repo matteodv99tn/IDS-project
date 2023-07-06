@@ -2,6 +2,8 @@ clear;
 clc;
 setup;
 
+config = get_current_configuration();
+
 
 %  ____       _
 % / ___|  ___| |_ _   _ _ __
@@ -74,7 +76,8 @@ for k = 1:length(t)
     end
     cellfun(@update, systems);
 
-    if mod(k, 300) == 0 % Perform  a scan
+    if mod(k, config.simulation.k_meas) == 0 % Perform  a scan
+
         %  ____  _     _        _ _           _           _
         % |  _ \(_)___| |_ _ __(_) |__  _   _| |_ ___  __| |
         % | | | | / __| __| '__| | '_ \| | | | __/ _ \/ _` |
