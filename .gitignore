@@ -1,5 +1,6 @@
 # Matlab
 *.asv
+Results/
 
 
 # Byte-compiled / optimized / DLL files

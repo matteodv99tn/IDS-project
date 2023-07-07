@@ -38,7 +38,7 @@ dataset = {
 
 % --- Simulation parameters
 config.simulation.dt    = 0.001;                        % sampling period for the simulation
-config.simulation.max_t = 30;
+config.simulation.max_t = 40;
 config.simulation.k_meas = 300; % number of samples between each measurement
 config.simulation.N_max = ceil(config.simulation.max_t / config.simulation.dt) + 1;
 config.simulation.N_meas = ceil(config.simulation.N_max / config.simulation.k_meas);
