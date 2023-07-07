@@ -12,23 +12,19 @@ config = get_current_configuration();
 % |____/ \___|\__|\__,_| .__/
 %                      |_|
 
-test_name = "example";
+test_name = "test_1b";
 description = strcat("Problem summary:\n", ...
     "1 robot\n", ...
-    "fixed object\n", ...
+    "dynamic object\n", ...
     "collision avoidance strategy: maximum size\n"...
     );
 t = 0:config.simulation.dt:config.simulation.max_t;
 
 systems  = {
-    System([3; 3]); ...
-    System([2; -4]); ...
-    System([-3; 3]); ...
+    System([-3; 1]); ...
     };
 
-systems{1}.manipulator.set_initial_joint_config([pi/6; -4/6*pi + randn()*0.2; 2*pi*rand()]);
-systems{2}.manipulator.set_initial_joint_config([-5*pi/6; -5/6*pi + randn()*0.2; 2*pi*rand()]);
-systems{3}.manipulator.set_initial_joint_config([5*pi/6; 4/6*pi + randn()*0.2; 2*pi*rand()]);
+systems{1}.manipulator.set_initial_joint_config([pi/2; -pi/2 + randn()*0.2; -4/3*pi]);
 N_robots = length(systems);
 Q = ones(N_robots) / N_robots;
 
@@ -62,7 +58,7 @@ k_sens = 1;
 map_knowledge = zeros(config.simulation.N_meas, N_robots, 2);
 
 fprintf("-----------------------------------------------------------------\n");
-fprintf("%s\n", description);
+fprintf(description);
 fprintf("-----------------------------------------------------------------\n");
 fprintf("Spawned object: %s \n", obj.name);
 
@@ -115,6 +111,7 @@ for k = 1:length(t)
             poly = union(ptmp, p3);
             systems{i}.planner.allowed_region = poly;
         end
+        systems{i}.planner.allowed_region = polyshape([-5 -5 5 5], [-5 5 5 -5]);
 
 
 
@@ -246,6 +243,6 @@ end
 % |____/ \__\___/|_|  \___|
 %
 fprintf("-----------------------------------------------------------------\n");
-fprintf("%s\n", description);
+fprintf(description);
 diary("off");
 save(strcat(myfile, ".mat"));

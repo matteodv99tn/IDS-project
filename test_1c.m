@@ -12,31 +12,24 @@ config = get_current_configuration();
 % |____/ \___|\__|\__,_| .__/
 %                      |_|
 
-test_name = "example";
+test_name = "test_1c";
 description = strcat("Problem summary:\n", ...
     "1 robot\n", ...
-    "fixed object\n", ...
-    "collision avoidance strategy: maximum size\n"...
+    "static object\n", ...
+    "collision avoidance strategy: correspondence based\n"...
     );
 t = 0:config.simulation.dt:config.simulation.max_t;
 
 systems  = {
-    System([3; 3]); ...
-    System([2; -4]); ...
-    System([-3; 3]); ...
+    System([-3; 1]); ...
     };
 
-systems{1}.manipulator.set_initial_joint_config([pi/6; -4/6*pi + randn()*0.2; 2*pi*rand()]);
-systems{2}.manipulator.set_initial_joint_config([-5*pi/6; -5/6*pi + randn()*0.2; 2*pi*rand()]);
-systems{3}.manipulator.set_initial_joint_config([5*pi/6; 4/6*pi + randn()*0.2; 2*pi*rand()]);
+systems{1}.manipulator.set_initial_joint_config([pi/2; -pi/2 + randn()*0.2; -4/3*pi]);
 N_robots = length(systems);
 Q = ones(N_robots) / N_robots;
 
 obj_i = randi(numel(dataset));
 obj = dataset{obj_i};
-
-obj.RF = rototranslation_matrix(-2+4*rand(), -2+4*rand(), 2*pi*rand());
-
 
 
 %  ___       _ _   _       _ _          _   _
@@ -62,9 +55,15 @@ k_sens = 1;
 map_knowledge = zeros(config.simulation.N_meas, N_robots, 2);
 
 fprintf("-----------------------------------------------------------------\n");
-fprintf("%s\n", description);
+fprintf(description);
 fprintf("-----------------------------------------------------------------\n");
 fprintf("Spawned object: %s \n", obj.name);
+
+
+% --- Disable automatic generation of the object envelope
+for i = 1:N_robots
+    systems{i}.planner.remove_region = false;
+end
 
 %  ____  _                 _       _   _
 % / ___|(_)_ __ ___  _   _| | __ _| |_(_) ___  _ __
@@ -115,6 +114,7 @@ for k = 1:length(t)
             poly = union(ptmp, p3);
             systems{i}.planner.allowed_region = poly;
         end
+        systems{i}.planner.allowed_region = polyshape([-5 -5 5 5], [-5 5 5 -5]);
 
 
 
@@ -202,6 +202,16 @@ for k = 1:length(t)
                 [idx, params, costs] = systems{i}.map.find_best_fit(dataset);
                 fprintf("Robot #%d guess: %s\n", i, dataset{idx}.name);
 
+                est_obj = dataset{idx};
+                est_obj.RF = rototranslation_matrix(params(1), params(2), params(3));
+                datapoints = est_obj.get_projected_polygon();
+                est_obj_ps = polyshape(datapoints(1,1:end-1), datapoints(2,1:end-1));
+                hole = polybuffer(est_obj_ps, 0.2);
+                if ~isempty(systems{i}.planner.allowed_region)
+                    region = systems{i}.planner.allowed_region;
+                    systems{i}.planner.allowed_region = subtract(region, hole);
+                end
+
                 % --- Based on the guess, check if some states might be removed
                 idx = systems{i}.map.find_removable_state(params, dataset{idx});
                 if ~isempty(idx)
@@ -210,6 +220,7 @@ for k = 1:length(t)
                         systems{j}.map.remove_state_i(idx);
                     end
                 end
+
             end
         end
 
@@ -246,6 +257,6 @@ end
 % |____/ \__\___/|_|  \___|
 %
 fprintf("-----------------------------------------------------------------\n");
-fprintf("%s\n", description);
+fprintf(description);
 diary("off");
 save(strcat(myfile, ".mat"));

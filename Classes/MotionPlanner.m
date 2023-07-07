@@ -16,6 +16,7 @@ properties %% ---- Attributes of the class -------------------------------------
 
     wrong_state_pos = [];
     k = 0;
+    remove_region = true;
 
     allreg_hist;
     hist_k;
@@ -146,7 +147,7 @@ methods %% ---- Member functions -----------------------------------------------
 
 
 
-        if map.get_size() > 2
+        if map.get_size() > 2 && self.remove_region
             map_points = zeros(2, map.get_size());
             for i = 1:map.get_size()
                 map_points(:,i) = map.get_state_i(i);
