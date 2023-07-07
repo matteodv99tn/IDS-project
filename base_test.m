@@ -13,6 +13,7 @@ config = get_current_configuration();
 %                      |_|
 
 test_name = "example";
+description = "An example of simulation"
 t = 0:config.simulation.dt:config.simulation.max_t;
 
 systems  = {
@@ -49,13 +50,15 @@ end
 if ~exist(myfolder, "dir")
     mkdir(myfolder);
 end
-myfile = fullfile(myfolder, sprintf("simulation_%03d", numel(dir(myfolder))-1));
+myfile = fullfile(myfolder, sprintf("simulation_%03d", numel(dir(myfolder))/2));
 diary(strcat(myfile, ".log"));
 
 
 k_sens = 1;
 map_knowledge = zeros(config.simulation.N_meas, N_robots, 2);
 
+fprintf("%s", description);
+fprintf("-----------------------------------------------------------------\n");
 fprintf("Spawned object: %s \n", obj.name);
 
 %  ____  _                 _       _   _
@@ -90,7 +93,7 @@ for k = 1:length(t)
         % |  __/| | | (_) | (_|  __/\__ \__ \
         % |_|   |_|  \___/ \___\___||___/___/
         %
-        fprintf(" --- Sensors Step %d --- \n", k_sens);
+        fprintf(" -------------- Sensors Step %d --------------\n", k_sens);
         k_sens = k_sens + 1;
 
         % --- Update allowed region
@@ -205,7 +208,7 @@ for k = 1:length(t)
             end
         end
 
-
+        cellfun(@(sys) sys.planner.save_region(), systems);
         %  ____  _       _
         % |  _ \| | ___ | |_
         % | |_) | |/ _ \| __|
@@ -237,5 +240,7 @@ end
 %  ___) | || (_) | | |  __/
 % |____/ \__\___/|_|  \___|
 %
+fprintf("-----------------------------------------------------------------\n");
+fprintf("%s", description);
 diary("off");
 save(strcat(myfile, ".mat"));

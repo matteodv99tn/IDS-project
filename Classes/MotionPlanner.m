@@ -15,7 +15,10 @@ properties %% ---- Attributes of the class -------------------------------------
     target_count = 0;
 
     wrong_state_pos = [];
-    k = 0
+    k = 0;
+
+    allreg_hist;
+    hist_k;
 
 end % properties
 
@@ -23,7 +26,17 @@ end % properties
 methods %% ---- Member functions ------------------------------------------------------------------
 
     function self = MotionPlanner()
+        config = get_current_configuration();
+        N = config.simulation.N_meas;
+        self.allreg_hist = cell(1, N);
+        self.hist_k  = 1;
     end % MotionPlanner constructor
+
+
+    function save_region(self)
+        self.allreg_hist{self.hist_k} = self.allowed_region;
+        self.hist_k = self.hist_k + 1;
+    end
 
 
     function update_target(self, manipulator,  map)

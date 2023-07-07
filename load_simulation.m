@@ -1,4 +1,3 @@
-close all;
 clear;
 clc;
 
@@ -67,7 +66,10 @@ for k = 1:length(plot_times)
     title(ttl);
     plot(obj);
     cellfun(@(sys) plot_manipulator(sys.manipulator, k_robot), systems);
-
+    cellfun(@(sys) plot_voronoi_cell(sys.planner, k_sensor), systems);
+    cellfun(@(sys) plot_measurement(sys.map, k_sensor), systems);
+    plot_map(systems{1}.map, k_sensor);
+    axis equal;
 
     delta_plot = toc;
     pause(plot_dt - delta_plot);
@@ -107,7 +109,38 @@ function plot_manipulator(man, time)
 end % plot_manipulator
 
 
+function plot_voronoi_cell(planner, time)
+    if isempty(planner.allreg_hist{time})
+        time = time - 1;
+    end
+    plot(planner.allreg_hist{time});
+end % plot_voronoi_cell
 
 
+function plot_map(map, time)
+    if isempty(map.x_hist{time}) && time > 1
+        time = time - 1;
+    end
+    x = map.x_hist{time};
+    P = map.P_hist{time};
+
+    for i = 1:numel(x)/2
+        xi = x(2*i-1:2*i);
+        Pi = P(2*i-1:2*i, 2*i-1:2*i);
+        [data_x, data_y] = uncertainty_ellipsoid(xi, Pi);
+        plot(data_x, data_y, "b", "LineWidth", 1);
+    end
+end % plot_map
 
 
+function plot_measurement(map, time)
+    z = map.z_hist{time};
+    R = map.R_hist{time};
+
+    for i = 1:numel(z)/2
+        zi = z(2*i-1:2*i);
+        Ri = R(2*i-1:2*i, 2*i-1:2*i);
+        [data_x, data_y] = uncertainty_ellipsoid(zi, Ri);
+        plot(data_x, data_y, "r:", "LineWidth", 1);
+    end
+end % plot_measurement
