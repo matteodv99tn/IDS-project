@@ -111,8 +111,6 @@ for k = 1:length(t)
             poly = union(ptmp, p3);
             systems{i}.planner.allowed_region = poly;
         end
-        systems{i}.planner.allowed_region = polyshape([-5 -5 5 5], [-5 5 5 -5]);
-
 
 
         % --- Perform scan  and update

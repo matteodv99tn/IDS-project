@@ -12,10 +12,10 @@ config = get_current_configuration();
 % |____/ \___|\__|\__,_| .__/
 %                      |_|
 
-test_name = "test_2c";
+test_name = "test_3d";
 description = strcat("Problem summary:\n", ...
-    "2 robots\n", ...
-    "static object\n", ...
+    "3 robots\n", ...
+    "dynamic object\n", ...
     "collision avoidance strategy: correspondence based\n"...
     );
 t = 0:config.simulation.dt:config.simulation.max_t;
@@ -23,16 +23,21 @@ t = 0:config.simulation.dt:config.simulation.max_t;
 systems  = {
     System([3; 3]); ...
     System([2; -4]); ...
+    System([-3; 3]); ...
     };
 
 systems{1}.manipulator.set_initial_joint_config([pi/6; -4/6*pi + randn()*0.2; 2*pi*rand()]);
 systems{2}.manipulator.set_initial_joint_config([-5*pi/6; -5/6*pi + randn()*0.2; 2*pi*rand()]);
+systems{3}.manipulator.set_initial_joint_config([5*pi/6; 4/6*pi + randn()*0.2; 2*pi*rand()]);
 
 N_robots = length(systems);
 Q = ones(N_robots) / N_robots;
 
 obj_i = randi(numel(dataset));
 obj = dataset{obj_i};
+
+obj.RF = rototranslation_matrix(-2+4*rand(), -2+4*rand(), 2*pi*rand());
+
 
 
 %  ___       _ _   _       _ _          _   _
