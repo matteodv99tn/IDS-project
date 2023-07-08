@@ -3,6 +3,7 @@ clc;
 setup;
 
 config = get_current_configuration();
+configuration_name = "tests";
 
 
 %  ____       _
@@ -56,6 +57,7 @@ diary(strcat(myfile, ".log"));
 
 k_sens = 1;
 map_knowledge = zeros(config.simulation.N_meas, N_robots, 2);
+detect_hist = zeros(config.simulation.N_meas, N_robots);
 
 fprintf("-----------------------------------------------------------------\n");
 fprintf(description);
@@ -198,6 +200,7 @@ for k = 1:length(t)
                 % --- Get the best fit
                 [idx, params, costs] = systems{i}.map.find_best_fit(dataset);
                 fprintf("Robot #%d guess: %s\n", i, dataset{idx}.name);
+                detect_hist(k_sens, i) = idx;
 
                 % --- Based on the guess, check if some states might be removed
                 idx = systems{i}.map.find_removable_state(params, dataset{idx});
