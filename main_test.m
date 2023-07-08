@@ -4,6 +4,8 @@ clc;
 
 setup;
 
+n_experiments = 2;
+
 scripts_names = {...
     "test_1a", ...
     "test_1b", ...
@@ -20,8 +22,11 @@ scripts_names = {...
     };
 % parpool(4);
 
-parfor i = 1:length(scripts_names)
-    run_test(scripts_names, i);
+for j = 1:n_experiments
+    sanitize_results_folder;
+    parfor i = 1:length(scripts_names)
+        run_test(scripts_names, i);
+    end
 end
 
 
@@ -31,6 +36,7 @@ delete(gcp);
 
 function run_test(sources, idx)
     try
+        pause(rand()*3);
         run(sources{idx});
     catch
         f = fopen("parpool.log", "a");

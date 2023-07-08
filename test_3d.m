@@ -2,9 +2,8 @@ clear;
 clc;
 setup;
 
-config = get_current_configuration();
 configuration_name = "tests";
-
+config = get_current_configuration();
 
 %  ____       _
 % / ___|  ___| |_ _   _ _ __

@@ -44,12 +44,11 @@ function plot_results(filename, plot_animation, save_plots)
     %
 
     figure(1), clf, hold on;
-    if ~save_plots
-        title("Discovered states");
-    end
-    plot(meas_times, map_knowledge(:, 2));
-    plot(meas_times, map_knowledge(:, 1));
+    title("Discovered states");
+    knowledge_plot(meas_times, map_knowledge);
     legend("Discovered states", "Fully known states", "Location", "SouthEast");
+    xlabel("Time [s]");
+    ylabel("Vertex count");
     grid on;
     if save_plots
         export_figure(mat_file, "disc_states");
@@ -57,8 +56,12 @@ function plot_results(filename, plot_animation, save_plots)
 
 
     figure(2), clf, hold on;
-    if ~save_plots
-        title("Detection");
+    title("Detection");
+    detection_plot(meas_times, detect_hist, obj_i);
+    xlabel("Time [s]");
+    ylabel("Detection");
+    if save_plots
+        export_figure(mat_file, "detection");
     end
 
 

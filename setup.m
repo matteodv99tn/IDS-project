@@ -8,7 +8,6 @@ addpath("Functions");
 addpath("Configurations");
 addpath("Test_Scripts");
 
-
 global dt;                      % sampling period for the simulation
 global d_max;                   % maximum value that can be sensed
 global d_cam_std;               % standard deviation of the lidar scan ranging (in m)
@@ -38,7 +37,7 @@ dataset = {
 
 % --- Simulation parameters
 config.simulation.dt    = 0.001;                        % sampling period for the simulation
-config.simulation.max_t = 40;
+config.simulation.max_t = 25;
 config.simulation.k_meas = 300; % number of samples between each measurement
 config.simulation.N_max = ceil(config.simulation.max_t / config.simulation.dt) + 1;
 config.simulation.N_meas = ceil(config.simulation.N_max / config.simulation.k_meas);

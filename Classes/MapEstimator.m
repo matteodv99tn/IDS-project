@@ -475,7 +475,9 @@ methods %% ---- Member functions -----------------------------------------------
 
     function cost = cost_function(self, x, obj)
         cost_vect = self.cost_function_vector(x, obj);
-        cost = mean(cost_vect) / (1+length(find(cost_vect < 9)));
+        good_matches = find(cost_vect < 9);
+        delta = size(obj.point_matrix, 2) - length(good_matches);
+        cost = mean(cost_vect) * abs(delta);
     end
 
 
