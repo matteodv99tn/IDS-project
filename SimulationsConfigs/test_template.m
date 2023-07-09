@@ -16,7 +16,6 @@ systems  = {
 systems{1}.manipulator.set_initial_joint_config([pi/2; -pi/2 + randn()*0.2; -4/3*pi]);
 
 obj_i = randi(numel(dataset));
-obj_i = 5;
 
 with_dynamic_plot = true;
 randomize_position = false;
