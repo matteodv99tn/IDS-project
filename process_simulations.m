@@ -1,11 +1,6 @@
 setup;
 addpath("Functions/plot_utils");
 
-testfile = "Results/test_1d/simulation_004.mat";
-%plot_results(testfile, true, false);
-
-% eteas
-
 tmp = strcat("*", filesep, "*.mat");
 filelist = dir(fullfile("Results", tmp));
 

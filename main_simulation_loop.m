@@ -1,47 +1,10 @@
-clear;
-clc;
-setup;
-
-configuration_name = "tests";
-config = get_current_configuration();
-
-
-%  ____       _
-% / ___|  ___| |_ _   _ _ __
-% \___ \ / _ \ __| | | | '_ \
-%  ___) |  __/ |_| |_| | |_) |
-% |____/ \___|\__|\__,_| .__/
-%                      |_|
-
-test_name = "test_1b";
-description = strcat("Problem summary:\n", ...
-    "1 robot\n", ...
-    "dynamic object\n", ...
-    "collision avoidance strategy: maximum size\n"...
-    );
-t = 0:config.simulation.dt:config.simulation.max_t;
-
-systems  = {
-    System([-3; 1]); ...
-    };
-
-systems{1}.manipulator.set_initial_joint_config([pi/2; -pi/2 + randn()*0.2; -4/3*pi]);
-N_robots = length(systems);
-Q = ones(N_robots) / N_robots;
-
-obj_i = randi(numel(dataset));
-obj = dataset{obj_i};
-
-obj.RF = rototranslation_matrix(-2+4*rand(), -2+4*rand(), 2*pi*rand());
-
-
-
 %  ___       _ _   _       _ _          _   _
 % |_ _|_ __ (_) |_(_) __ _| (_)______ _| |_(_) ___  _ __
 %  | || '_ \| | __| |/ _` | | |_  / _` | __| |/ _ \| '_ \
 %  | || | | | | |_| | (_| | | |/ / (_| | |_| | (_) | | | |
 % |___|_| |_|_|\__|_|\__,_|_|_/___\__,_|\__|_|\___/|_| |_|
 %
+
 
 % --- Initialize folder for storing results and data logging
 myfolder = fullfile("Results", test_name);
@@ -55,9 +18,32 @@ myfile = fullfile(myfolder, sprintf("simulation_%03d", numel(dir(myfolder))/2));
 diary(strcat(myfile, ".log"));
 
 
+% --- Initialization
+t = 0:config.simulation.dt:config.simulation.max_t;
+N_robots = length(systems);
+Q = ones(N_robots) / N_robots;
+
+
+% --- Spawned object
+obj = dataset{obj_i};
+if randomize_position
+    obj.RF = rototranslation_matrix(-2+4*rand(), -2+4*rand(), 2*pi*rand());
+end
+
+
+% --- Voronoi map settings
+if guess_based_voronoi
+    for i = 1:N_robots
+        systems{i}.planner.remove_region = false;
+    end
+end
+
+
+% --- Logging variables
 k_sens = 1;
 map_knowledge = zeros(config.simulation.N_meas, N_robots, 2);
 detect_hist = zeros(config.simulation.N_meas, N_robots);
+
 
 fprintf("-----------------------------------------------------------------\n");
 fprintf(description);
@@ -113,7 +99,9 @@ for k = 1:length(t)
             poly = union(ptmp, p3);
             systems{i}.planner.allowed_region = poly;
         end
-        systems{i}.planner.allowed_region = polyshape([-5 -5 5 5], [-5 5 5 -5]);
+        if N_robots == 1
+            systems{1}.planner.allowed_region = polyshape([-5 -5 5 5], [-5 5 5 -5]);
+        end
 
 
 
@@ -162,16 +150,6 @@ for k = 1:length(t)
         end
 
 
-        % --- TODO: check this part of the code
-        rm_idxs = cellfun(@undesired_states, systems, "UniformOutput", false);
-        rm_idxss = [];
-        for i = 1:N_robots
-            rm_idxss = [rm_idxss; rm_idxs{i}];
-        end
-        if ~isempty(rm_idxss)
-            fprintf("WATH OUT\n");
-        end
-
         % --- Check for overlapping states
         redundant_states = cellfun(@(sys) sys.map.redundant_states(), systems, "UniformOutput", false);
         states_to_remove = [];
@@ -202,6 +180,21 @@ for k = 1:length(t)
                 fprintf("Robot #%d guess: %s\n", i, dataset{idx}.name);
                 detect_hist(k_sens, i) = idx;
 
+
+                % --- If guess_based_voronoi, based on the classification the
+                %     allowed region is constrained
+                if guess_based_voronoi
+                    est_obj = dataset{idx};
+                    est_obj.RF = rototranslation_matrix(params(1), params(2), params(3));
+                    datapoints = est_obj.get_projected_polygon();
+                    est_obj_ps = polyshape(datapoints(1,1:end-1), datapoints(2,1:end-1));
+                    hole = polybuffer(est_obj_ps, 0.2);
+                    if ~isempty(systems{i}.planner.allowed_region)
+                        region = systems{i}.planner.allowed_region;
+                        systems{i}.planner.allowed_region = subtract(region, hole);
+                    end
+                end
+
                 % --- Based on the guess, check if some states might be removed
                 idx = systems{i}.map.find_removable_state(params, dataset{idx});
                 if ~isempty(idx)
@@ -220,20 +213,22 @@ for k = 1:length(t)
         % |  __/| | (_) | |_
         % |_|   |_|\___/ \__|
         %
-        figure(1), clf, hold on
-        ttl = sprintf("Time: %.2fs - %.1f%%", k*config.simulation.dt, k/length(t)*100);
-        title(ttl);
-        cellfun(@(sys) plot(sys.manipulator), systems);
-        plot(obj);
-        plot(systems{1}.map);
-        axis equal;
-        XX = 4;
-        xlim([-XX, XX]);
-        ylim([-XX, XX]);
-        for i = 1:N_robots
-            plot(systems{i}.planner.allowed_region);
+        if with_dynamic_plot
+            figure(1), clf, hold on
+            ttl = sprintf("Time: %.2fs - %.1f%%", k*config.simulation.dt, k/length(t)*100);
+            title(ttl);
+            cellfun(@(sys) plot(sys.manipulator), systems);
+            plot(obj);
+            plot(systems{1}.map);
+            axis equal;
+            XX = 4;
+            xlim([-XX, XX]);
+            ylim([-XX, XX]);
+            for i = 1:N_robots
+                plot(systems{i}.planner.allowed_region);
+            end
+            grid on;
         end
-        grid on;
     end
 end
 

@@ -1,0 +1,25 @@
+start_simulation_loop;
+
+
+test_name = "test_1b";
+description = strcat("Problem summary:\n", ...
+    "1 robot\n", ...
+    "dynamic object\n", ...
+    "collision avoidance strategy: maximum size\n"...
+    );
+
+systems  = {
+    System([-3; 1]); ...
+    };
+
+systems{1}.manipulator.set_initial_joint_config([pi/2; -pi/2 + randn()*0.2; -4/3*pi]);
+
+obj_i = randi(numel(dataset));
+obj = dataset{obj_i};
+
+with_dynamic_plot = true;
+randomize_position = true;
+guess_based_voronoi = false;
+
+
+main_simulation_loop;
