@@ -6,7 +6,8 @@ addpath(fullfile("Classes", "Datasets"));
 addpath(fullfile("Classes", "Controllers"));
 addpath("Functions");
 addpath("Configurations");
-addpath("Test_Scripts");
+addpath("SimulationsConfigs");
+addpath(fullfile("Functions", "plot_utils"))
 
 global dt;                      % sampling period for the simulation
 global d_max;                   % maximum value that can be sensed

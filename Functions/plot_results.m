@@ -26,7 +26,7 @@ function plot_results(filename, plot_animation, save_plots)
         mat_file = strcat(filename, ".mat");
     end
 
-    fprintf(fileread(log_file));
+    % fprintf(fileread(log_file));
     load(mat_file);
 
     plot_dt = 1 / plot_rate;

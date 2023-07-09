@@ -503,6 +503,10 @@ methods %% ---- Member functions -----------------------------------------------
         costs = self.cost_function_vector(x, obj);
         state_to_remove = [];
 
+        if self.get_size() <= 3
+            return;
+        end
+
         n_vertices = size(obj.point_matrix, 2) - 1;
 
         [costs, idx] = sort(costs);
