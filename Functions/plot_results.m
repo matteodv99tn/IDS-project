@@ -73,7 +73,6 @@ function plot_results(filename, plot_animation, save_plots)
     % |____/ \__, |_| |_|\__,_|_| |_| |_|_|\___| |_|   |_|\___/ \__|___/
     %        |___/
     if plot_animation
-    close all;
     for k = 1:length(plot_times)
         tic;
 

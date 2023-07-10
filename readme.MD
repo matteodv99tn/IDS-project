@@ -1,29 +1,33 @@
-# Installation instructions
-The project is based in _ROS_ and the [_Locosim framework_](https://github.com/mfocchi/locosim), that are so required to be installed on the machine; furthermore all path variables must be set in the `.bashrc` file, as suggested in the Locosim repository.
+# Run the code
 
-To simplify the installation process scripts inside the [`install_scripts`](install_scripts/) can be used.
-Once they are made executable (`chmod a+x install_scripts/*.sh`), you can install ROS with
-``` sh
-install_scripts/ros_installer.sh
+Performing simulation is computationally expensive.
+It is suggested forstly to run `main_test` in order to generate the data that then can be loaded and plotted using the function `plot_results`. At the end a folder of data should be generated as follows:
+
 ```
-The script is set to install the ROS version compatible with _Ubuntu 20.04_; to install on older platforms just change the variables in the first lines of the files (see _software versions_ inside the readme of the Locosim repository).
-
-To install Locosim run
-``` sh
-install_scripts/locosim_installer.sh
+Results/
+├── test_1a/
+│   ├── simulation_001.log
+│   ├── simulation_001.mat
+│   ├── simulation_002.log
+│   ├── simulation_002.mat
+│   └── ...
+├── test_1b/
+│   ├── simulation_001.log
+│   ├── simulation_001.mat
+│   └── ...
+└── ...
 ```
-In this case the lonely parameter that should be changed is the installation destination of the ROS workspace and locosim, that by default is in `~/ros`.
 
-## Cloning this repository
-
-Once the ROS workspace `~/ros` is set up, you can clone the repository inside the `~/ros/src` folder:
+Now to use the `plot_results` function to see the results of a given simulation:
 ```
-git clone https://github.com/matteodv99tn/IDS-project.git cooperative_ur5_estimation_control
+plot_results('Results/test_1a/simulation_001.mat', true, false);
 ```
-The package for ROS has a different name then the repository, so be aware of the second argument of the clone command.
+where `true` enables the dynamic plot of the moving robots while `false` is to avoid the automatic exporting of the associated figures.
 
 
-# Bibliography and references:
+
+
+# Bibliography and other useful references:
 
 - [_Cooperative manipulation_](http://www.prisma.unina.it/courses/SHB_39.pdf): interesting book extract containing useful informations in order to work multiple robots;
 - [_Control and Estimation for Cooperative Manipulator Tasks_](http://dspace.mit.edu/handle/1721.1/31217): technical report for a project whee they discuss the problem of handing a object from one robot to another;
